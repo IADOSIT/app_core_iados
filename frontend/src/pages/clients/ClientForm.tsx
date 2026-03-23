@@ -1,0 +1,185 @@
+import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { clientsApi } from '../../services/api';
+import type { Client } from '../../types';
+
+interface ClientFormProps {
+  client?: Client;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export default function ClientForm({ client, onSuccess, onCancel }: ClientFormProps) {
+  const isEdit = !!client;
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      type: client?.type || 'empresa',
+      status: client?.status || 'prospecto',
+      companyName: client?.companyName || '',
+      rfc: client?.rfc || '',
+      industry: client?.industry || '',
+      website: client?.website || '',
+      firstName: client?.firstName || '',
+      lastName: client?.lastName || '',
+      email: client?.email || '',
+      phone: client?.phone || '',
+      whatsapp: client?.whatsapp || '',
+      address: client?.address || '',
+      city: client?.city || '',
+      state: client?.state || '',
+      country: client?.country || 'México',
+      postalCode: client?.postalCode || '',
+      profitPersonCount: client?.profitPersonCount || 2,
+      notes: client?.notes || '',
+    },
+  });
+
+  const clientType = watch('type');
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      isEdit ? clientsApi.update(client!.id, data) : clientsApi.create(data),
+    onSuccess: () => {
+      toast.success(isEdit ? 'Cliente actualizado' : 'Cliente creado exitosamente');
+      onSuccess();
+    },
+    onError: (error: unknown) => {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      toast.error(axiosError.response?.data?.message || 'Error al guardar cliente');
+    },
+  });
+
+  const onSubmit = (data: Record<string, unknown>) => mutation.mutate(data);
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {/* Tipo y Estado */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tipo *</label>
+          <select className="select" {...register('type', { required: true })}>
+            <option value="empresa">Empresa</option>
+            <option value="persona_fisica">Persona Física</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Estado</label>
+          <select className="select" {...register('status')}>
+            <option value="prospecto">Prospecto</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="suspendido">Suspendido</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Datos empresa */}
+      {clientType === 'empresa' && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Razón Social / Nombre Empresa *</label>
+            <input className="input" placeholder="Empresa S.A. de C.V." {...register('companyName', { required: clientType === 'empresa' })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5">RFC</label>
+            <input className="input" placeholder="XAXX010101000" {...register('rfc')} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Industria</label>
+            <input className="input" placeholder="Tecnología, Manufactura..." {...register('industry')} />
+          </div>
+        </div>
+      )}
+
+      {/* Nombre contacto */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+            {clientType === 'empresa' ? 'Nombre Contacto' : 'Nombre *'}
+          </label>
+          <input
+            className="input"
+            placeholder="Juan"
+            {...register('firstName', { required: clientType === 'persona_fisica' })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Apellido</label>
+          <input className="input" placeholder="García" {...register('lastName')} />
+        </div>
+      </div>
+
+      {/* Contacto */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email *</label>
+          <input
+            type="email"
+            className={`input ${errors.email ? 'border-red-500/50' : ''}`}
+            placeholder="contacto@empresa.com"
+            {...register('email', { required: 'Email requerido' })}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Teléfono</label>
+          <input className="input" placeholder="+52 55 1234 5678" {...register('phone')} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">WhatsApp</label>
+          <input className="input" placeholder="+52 55 1234 5678" {...register('whatsapp')} />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Sitio Web</label>
+          <input className="input" placeholder="https://empresa.com" {...register('website')} />
+        </div>
+      </div>
+
+      {/* Dirección */}
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Ciudad</label>
+          <input className="input" placeholder="CDMX" {...register('city')} />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Estado</label>
+          <input className="input" placeholder="Ciudad de México" {...register('state')} />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Personas</label>
+          <select className="select" {...register('profitPersonCount', { valueAsNumber: true })}>
+            <option value={2}>2 personas</option>
+            <option value={3}>3 personas</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Notas</label>
+        <textarea
+          className="input resize-none"
+          rows={3}
+          placeholder="Información adicional..."
+          {...register('notes')}
+        />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="btn-ghost flex-1 justify-center">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="btn-primary flex-1 justify-center"
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? 'Guardando...' : isEdit ? 'Actualizar' : 'Crear Cliente'}
+        </button>
+      </div>
+    </form>
+  );
+}
