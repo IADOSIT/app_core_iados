@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { clientsApi } from '../../services/api';
+import { Lock } from 'lucide-react';
 import type { Client } from '../../types';
 
 interface ClientFormProps {
@@ -33,6 +34,8 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       postalCode: client?.postalCode || '',
       profitPersonCount: client?.profitPersonCount || 2,
       notes: client?.notes || '',
+      adminUser: (client as any)?.adminUser || '',
+      adminPassword: '',
     },
   });
 
@@ -160,12 +163,26 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
 
       <div>
         <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Notas</label>
-        <textarea
-          className="input resize-none"
-          rows={3}
-          placeholder="Información adicional..."
-          {...register('notes')}
-        />
+        <textarea className="input resize-none" rows={2} placeholder="Información adicional..." {...register('notes')} />
+      </div>
+
+      {/* Vault credenciales del cliente */}
+      <div className="rounded-xl p-3 space-y-3" style={{ background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.18)' }}>
+        <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#F59E0B' }}>
+          <Lock size={12} /> Credenciales proporcionadas al cliente — encriptadas
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Usuario admin</label>
+            <input className="input" placeholder="usuario@cliente.com" {...register('adminUser')} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Contraseña {isEdit && '(vacío = no cambiar)'}
+            </label>
+            <input type="password" className="input" placeholder={isEdit ? '••••••••' : 'Contraseña'} {...register('adminPassword')} />
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

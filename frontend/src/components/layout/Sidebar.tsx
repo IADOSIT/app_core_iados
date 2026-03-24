@@ -15,11 +15,11 @@ interface SidebarProps {
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/products', icon: Package, label: 'Productos' },
   { to: '/clients', icon: Users, label: 'Clientes' },
   { to: '/licenses', icon: Key, label: 'Licencias' },
   { to: '/payments', icon: CreditCard, label: 'Pagos' },
   { to: '/invoices', icon: FileText, label: 'Facturas' },
-  { to: '/products', icon: Package, label: 'Productos' },
   { to: '/versions', icon: GitBranch, label: 'Versiones' },
   { to: '/expenses', icon: TrendingDown, label: 'Gastos' },
   { to: '/reports', icon: BarChart3, label: 'Reportes' },

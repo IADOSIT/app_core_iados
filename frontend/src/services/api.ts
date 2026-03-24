@@ -75,6 +75,7 @@ export const clientsApi = {
   update: (id: string, data: Record<string, unknown>) => api.put(`/clients/${id}`, data),
   delete: (id: string) => api.delete(`/clients/${id}`),
   addContact: (id: string, data: Record<string, unknown>) => api.post(`/clients/${id}/contacts`, data),
+  revealPassword: (id: string) => api.get(`/clients/${id}/reveal-password`),
 };
 
 // ========================
@@ -121,6 +122,10 @@ export const productsApi = {
   update: (id: string, data: Record<string, unknown>) => api.put(`/products/${id}`, data),
   addPlan: (id: string, data: Record<string, unknown>) => api.post(`/products/${id}/plans`, data),
   regenerateSecret: (id: string) => api.post(`/products/${id}/regenerate-secret`),
+  revealPassword: (id: string) => api.get(`/products/${id}/reveal-password`),
+  getNotes: (id: string) => api.get(`/products/${id}/notes`),
+  addNote: (id: string, note: string) => api.post(`/products/${id}/notes`, { note }),
+  deleteNote: (id: string, noteId: string) => api.delete(`/products/${id}/notes/${noteId}`),
 };
 
 // ========================

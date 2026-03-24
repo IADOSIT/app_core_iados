@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Package, Tag, ExternalLink, Key, Copy, Check, RefreshCw, Globe, Monitor, X } from 'lucide-react';
+import {
+  Plus, Package, Tag, ExternalLink, Key, Copy, Check, RefreshCw,
+  Globe, Monitor, X, Lock, Eye, EyeOff, User, StickyNote, Trash2,
+  Send, LogIn,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { productsApi } from '../../services/api';
 import Modal from '../../components/ui/Modal';
@@ -19,13 +23,10 @@ const planTypeBadge: Record<string, string> = {
 
 const VALIDATE_BASE = `${window.location.protocol}//${window.location.hostname}:4000/api/v1/public/licenses/validate`;
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const copy = () => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
     <button onClick={copy} className="ml-1 p-0.5 rounded transition-colors" style={{ color: 'var(--text-muted)' }} title="Copiar">
       {copied ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
@@ -33,83 +34,187 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+// ── Vault ────────────────────────────────────────────────────────────────────
+function VaultSection({ productId, adminUser, hasAdminPassword }: { productId: string; adminUser?: string; hasAdminPassword?: boolean }) {
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const [showPwd, setShowPwd] = useState(false);
+
+  const reveal = useMutation({
+    mutationFn: () => productsApi.revealPassword(productId),
+    onSuccess: (res) => { setRevealed(res.data.password || ''); setShowPwd(true); },
+    onError: () => toast.error('Error al obtener contraseña'),
+  });
+
+  if (!adminUser && !hasAdminPassword) return null;
+
+  return (
+    <div className="rounded-xl p-3 space-y-2" style={{ background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.15)' }}>
+      <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#F59E0B' }}>
+        <Lock size={11} /> Credenciales Admin (Vault)
+      </p>
+      {adminUser && (
+        <div className="flex items-center gap-2">
+          <User size={11} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <span className="text-xs font-mono" style={{ color: 'var(--text-secondary)' }}>{adminUser}</span>
+          <CopyButton text={adminUser} />
+        </div>
+      )}
+      {hasAdminPassword && (
+        <div className="flex items-center gap-2">
+          <Key size={11} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          {revealed !== null ? (
+            <>
+              <code className="text-xs font-mono flex-1" style={{ color: 'var(--text-secondary)' }}>
+                {showPwd ? revealed : '••••••••••••'}
+              </code>
+              <button onClick={() => setShowPwd(!showPwd)} className="p-0.5" style={{ color: 'var(--text-muted)' }}>
+                {showPwd ? <EyeOff size={11} /> : <Eye size={11} />}
+              </button>
+              <CopyButton text={revealed} />
+            </>
+          ) : (
+            <button
+              onClick={() => reveal.mutate()}
+              disabled={reveal.isPending}
+              className="text-xs flex items-center gap-1 transition-colors hover:underline"
+              style={{ color: '#F59E0B' }}
+            >
+              <Eye size={11} /> {reveal.isPending ? 'Verificando...' : 'Revelar contraseña'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Notes ────────────────────────────────────────────────────────────────────
+function NotesSection({ productId }: { productId: string }) {
+  const qc = useQueryClient();
+  const [newNote, setNewNote] = useState('');
+  const [expanded, setExpanded] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ['product-notes', productId],
+    queryFn: () => productsApi.getNotes(productId),
+    enabled: expanded,
+  });
+
+  const notes: { id: string; note: string; created_at: string; author?: string }[] = data?.data?.data || [];
+
+  const addNote = useMutation({
+    mutationFn: () => productsApi.addNote(productId, newNote),
+    onSuccess: () => { setNewNote(''); qc.invalidateQueries({ queryKey: ['product-notes', productId] }); },
+    onError: () => toast.error('Error al agregar nota'),
+  });
+
+  const delNote = useMutation({
+    mutationFn: (noteId: string) => productsApi.deleteNote(productId, noteId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['product-notes', productId] }),
+    onError: () => toast.error('Error al eliminar nota'),
+  });
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full text-xs flex items-center justify-between px-3 py-2 rounded-xl transition-colors"
+        style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+      >
+        <span className="flex items-center gap-1.5"><StickyNote size={11} /> Notas del sistema</span>
+        <span>{expanded ? '▲' : '▼'}</span>
+      </button>
+
+      {expanded && (
+        <div className="space-y-2 rounded-xl p-3" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
+          {/* Existing notes */}
+          {notes.length > 0 ? (
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {notes.map((n) => (
+                <div key={n.id} className="flex items-start gap-2 group">
+                  <div className="flex-1 rounded-lg px-2.5 py-2" style={{ background: 'var(--bg-surface-solid)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{n.note}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                      {n.author && `${n.author} · `}{new Date(n.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => delNote.mutate(n.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded flex-shrink-0"
+                    style={{ color: '#FF5252' }}
+                    title="Eliminar nota"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-center py-2" style={{ color: 'var(--text-muted)' }}>Sin notas aún</p>
+          )}
+
+          {/* Add note */}
+          <div className="flex gap-2 pt-1">
+            <textarea
+              className="input resize-none flex-1 text-xs"
+              rows={2}
+              placeholder="Agregar nota..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && e.ctrlKey && newNote.trim()) addNote.mutate(); }}
+            />
+            <button
+              onClick={() => addNote.mutate()}
+              disabled={!newNote.trim() || addNote.isPending}
+              className="btn-primary px-2 py-0 self-end mb-0.5"
+              title="Agregar (Ctrl+Enter)"
+            >
+              <Send size={13} />
+            </button>
+          </div>
+          <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>Ctrl+Enter para enviar</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Integration ──────────────────────────────────────────────────────────────
 function IntegrationCard({ product, onRegenerate }: { product: Product; onRegenerate: (id: string) => void }) {
   const [showSecret, setShowSecret] = useState(false);
   const validateUrl = `${VALIDATE_BASE}/{LICENSE_KEY}`;
-
   return (
     <div className="mt-3 rounded-xl p-3 space-y-2" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
       <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--accent)' }}>
         <Key size={11} /> Integración API
       </p>
-
-      {product.systemUrl && (
-        <div className="flex items-center gap-1">
-          <Globe size={10} style={{ color: 'var(--text-muted)' }} />
-          <a href={product.systemUrl} target="_blank" rel="noopener noreferrer"
-            className="text-xs truncate hover:underline" style={{ color: 'var(--accent)' }}>
-            {product.systemUrl}
-          </a>
-          <ExternalLink size={9} style={{ color: 'var(--text-muted)' }} />
-        </div>
-      )}
-
-      {/* Endpoint de validación */}
       <div>
         <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Endpoint validación:</p>
         <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: 'var(--bg-surface-solid)', border: '1px solid var(--border)' }}>
-          <code className="text-xs truncate flex-1" style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>
-            GET {validateUrl}
-          </code>
+          <code className="text-xs truncate flex-1" style={{ color: 'var(--accent)', fontFamily: 'monospace' }}>GET {validateUrl}</code>
           <CopyButton text={validateUrl} />
         </div>
       </div>
-
-      {/* Header X-API-Key */}
       <div>
         <div className="flex items-center justify-between mb-0.5">
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Header <code className="text-xs" style={{ color: 'var(--text-secondary)' }}>X-API-Key</code>:
-          </p>
-          <button
-            onClick={() => onRegenerate(product.id)}
-            className="text-xs flex items-center gap-0.5 transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-            title="Regenerar secret"
-          >
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Header <code className="text-xs" style={{ color: 'var(--text-secondary)' }}>X-API-Key</code>:</p>
+          <button onClick={() => onRegenerate(product.id)} className="text-xs flex items-center gap-0.5 transition-colors" style={{ color: 'var(--text-muted)' }} title="Regenerar secret">
             <RefreshCw size={9} /> Regenerar
           </button>
         </div>
         <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: 'var(--bg-surface-solid)', border: '1px solid var(--border)' }}>
-          <code
-            className="text-xs flex-1 truncate cursor-pointer"
-            style={{ fontFamily: 'monospace', color: 'var(--text-secondary)', letterSpacing: showSecret ? 0 : 2 }}
-            onClick={() => setShowSecret(!showSecret)}
-            title="Clic para mostrar/ocultar"
-          >
+          <code className="text-xs flex-1 truncate cursor-pointer" style={{ fontFamily: 'monospace', color: 'var(--text-secondary)', letterSpacing: showSecret ? 0 : 2 }}
+            onClick={() => setShowSecret(!showSecret)} title="Clic para mostrar/ocultar">
             {showSecret ? product.apiSecret : '••••••••••••••••••••••••••••••••'}
           </code>
           {product.apiSecret && <CopyButton text={product.apiSecret} />}
-        </div>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
-          Clic en el campo para revelar
-        </p>
-      </div>
-
-      {/* Heartbeat */}
-      <div>
-        <p className="text-xs mb-0.5" style={{ color: 'var(--text-muted)' }}>Heartbeat (actualiza usuarios activos):</p>
-        <div className="flex items-center gap-1 rounded-lg px-2 py-1" style={{ background: 'var(--bg-surface-solid)', border: '1px solid var(--border)' }}>
-          <code className="text-xs truncate flex-1" style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-            POST /api/v1/public/licenses/heartbeat
-          </code>
-          <CopyButton text="POST /api/v1/public/licenses/heartbeat" />
         </div>
       </div>
     </div>
   );
 }
 
+// ── Preview iframe ───────────────────────────────────────────────────────────
 function SystemPreview({ url, onClose }: { url: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
@@ -129,15 +234,9 @@ function SystemPreview({ url, onClose }: { url: string; onClose: () => void }) {
           </div>
         </div>
         <div className="flex-1 relative">
-          <iframe
-            src={url}
-            className="w-full h-full border-0"
-            title="Sistema preview"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-          />
+          <iframe src={url} className="w-full h-full border-0" title="Sistema preview" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" />
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ zIndex: -1 }}>
             <Globe size={48} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
-            <p className="text-sm mt-2" style={{ color: 'var(--text-muted)', opacity: 0.5 }}>Cargando sistema...</p>
           </div>
         </div>
       </div>
@@ -145,6 +244,7 @@ function SystemPreview({ url, onClose }: { url: string; onClose: () => void }) {
   );
 }
 
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function ProductsPage() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -152,17 +252,11 @@ export default function ProductsPage() {
   const [expandedIntegration, setExpandedIntegration] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => productsApi.getAll(),
-  });
+  const { data, isLoading } = useQuery({ queryKey: ['products'], queryFn: () => productsApi.getAll() });
 
   const regenerate = useMutation({
     mutationFn: (id: string) => productsApi.regenerateSecret(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['products'] });
-      toast.success('API Secret regenerado');
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); toast.success('API Secret regenerado'); },
     onError: () => toast.error('Error al regenerar secret'),
   });
 
@@ -186,35 +280,28 @@ export default function ProductsPage() {
             action={<button onClick={() => setShowForm(true)} className="btn-primary"><Plus size={15} />Nuevo Sistema</button>} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {products.map((product) => (
             <div key={product.id} className="card p-5 space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}
-                  >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                     <Package size={18} style={{ color: 'var(--accent)' }} />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{product.name}</h3>
+                    <h3 className="font-bold text-base leading-tight" style={{ color: 'var(--text-primary)' }}>{product.name}</h3>
                     <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--text-muted)' }}>{product.description || 'Sin descripción'}</p>
                     {product.systemUrl && (
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <a href={product.systemUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs flex items-center gap-1 hover:underline"
-                          style={{ color: 'var(--accent)' }}>
-                          <Globe size={10} /> {product.apiSlug || product.systemUrl}
-                          <ExternalLink size={9} />
+                          className="text-xs flex items-center gap-1 hover:underline" style={{ color: 'var(--accent)' }}>
+                          <Globe size={10} /> {product.apiSlug || product.systemUrl} <ExternalLink size={9} />
                         </a>
-                        <button
-                          onClick={() => setPreviewUrl(product.systemUrl!)}
+                        <button onClick={() => setPreviewUrl(product.systemUrl!)}
                           className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded-md transition-colors"
-                          style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}
-                          title="Vista previa del sistema"
-                        >
+                          style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                           <Monitor size={9} /> Preview
                         </button>
                       </div>
@@ -223,6 +310,26 @@ export default function ProductsPage() {
                 </div>
                 <button onClick={() => setEditProduct(product)} className="btn-ghost py-1 px-2 text-xs flex-shrink-0">Editar</button>
               </div>
+
+              {/* Botón Acceder */}
+              {((product as any).accessUrl || product.systemUrl) && (
+                <a
+                  href={(product as any).accessUrl || product.systemUrl!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary w-full justify-center no-underline"
+                  style={{ display: 'flex', textDecoration: 'none' }}
+                >
+                  <LogIn size={14} /> Acceder al Sistema
+                </a>
+              )}
+
+              {/* Vault */}
+              <VaultSection
+                productId={product.id}
+                adminUser={(product as any).adminUser}
+                hasAdminPassword={(product as any).hasAdminPassword}
+              />
 
               {/* Precios */}
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -259,20 +366,18 @@ export default function ProductsPage() {
                 </div>
               )}
 
+              {/* Notes */}
+              <NotesSection productId={product.id} />
+
               {/* Toggle integración */}
               <button
                 onClick={() => setExpandedIntegration(expandedIntegration === product.id ? null : product.id)}
                 className="w-full text-xs flex items-center justify-center gap-1.5 py-1.5 rounded-lg transition-colors"
-                style={{
-                  color: expandedIntegration === product.id ? 'var(--accent)' : 'var(--text-muted)',
-                  background: 'var(--bg-hover)',
-                  border: '1px solid var(--border)',
-                }}
+                style={{ color: expandedIntegration === product.id ? 'var(--accent)' : 'var(--text-muted)', background: 'var(--bg-hover)', border: '1px solid var(--border)' }}
               >
                 <Key size={11} />
                 {expandedIntegration === product.id ? 'Ocultar integración API' : 'Ver integración API'}
               </button>
-
               {expandedIntegration === product.id && (
                 <IntegrationCard product={product} onRegenerate={(id) => regenerate.mutate(id)} />
               )}

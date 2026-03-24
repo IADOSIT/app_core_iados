@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Users, Building2, User, ExternalLink, Pencil, Package } from 'lucide-react';
+import { Plus, Search, Users, Building2, User, ExternalLink, Pencil, Package, Lock, Eye, EyeOff } from 'lucide-react';
 import { clientsApi } from '../../services/api';
+import toast from 'react-hot-toast';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -11,6 +12,37 @@ import Modal from '../../components/ui/Modal';
 import ClientForm from './ClientForm';
 import { formatDate, clientDisplayName } from '../../utils/format';
 import type { Client } from '../../types';
+
+function ClientVaultBadge({ clientId, adminUser, hasAdminPassword }: { clientId: string; adminUser?: string; hasAdminPassword?: boolean }) {
+  const [pwd, setPwd] = useState<string | null>(null);
+  const [show, setShow] = useState(false);
+  if (!adminUser && !hasAdminPassword) return null;
+
+  const reveal = async () => {
+    if (pwd !== null) { setShow(!show); return; }
+    try {
+      const res = await clientsApi.revealPassword(clientId);
+      setPwd(res.data.password || '');
+      setShow(true);
+    } catch { toast.error('Sin permiso para ver contraseña'); }
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+      {adminUser && (
+        <span className="text-xs font-mono flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+          <Lock size={10} style={{ color: '#F59E0B' }} /> {adminUser}
+        </span>
+      )}
+      {hasAdminPassword && (
+        <button onClick={reveal} className="text-xs flex items-center gap-0.5 transition-colors hover:underline" style={{ color: '#F59E0B' }}>
+          {show ? <EyeOff size={10} /> : <Eye size={10} />}
+          {pwd !== null ? (show ? <code className="font-mono">{pwd}</code> : '••••') : 'Ver pwd'}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function ClientsPage() {
   const navigate = useNavigate();
@@ -118,6 +150,11 @@ export default function ClientsPage() {
                         <div>
                           <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{clientDisplayName(client)}</div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{client.email || client.rfc || '—'}</div>
+                          <ClientVaultBadge
+                            clientId={client.id}
+                            adminUser={(client as any).admin_user}
+                            hasAdminPassword={(client as any).has_admin_password}
+                          />
                         </div>
                       </div>
                     </td>

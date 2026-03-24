@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { productsApi } from '../../services/api';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Lock } from 'lucide-react';
 import type { Product } from '../../types';
 
 interface ProductFormProps { product?: Product; onSuccess: () => void; onCancel: () => void; }
@@ -25,6 +25,9 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
       basePriceUsd: product?.basePriceUsd || 0,
       apiSlug: product?.apiSlug || '',
       systemUrl: product?.systemUrl || '',
+      accessUrl: (product as any)?.accessUrl || '',
+      adminUser: (product as any)?.adminUser || '',
+      adminPassword: '',
     },
   });
 
@@ -88,6 +91,31 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>URL del Sistema</label>
           <input type="url" className="input" placeholder="https://sistema.iados.mx" {...register('systemUrl')} />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>URL de Acceso Directo (botón Acceder)</label>
+        <input type="url" className="input" placeholder="https://sistema.iados.mx/login" {...register('accessUrl')} />
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Si difiere de la URL del sistema (ej. directo al login)</p>
+      </div>
+
+      {/* Vault */}
+      <div className="rounded-xl p-3 space-y-3" style={{ background: 'rgba(255,193,7,0.05)', border: '1px solid rgba(255,193,7,0.18)' }}>
+        <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#F59E0B' }}>
+          <Lock size={12} /> Credenciales Admin (Vault) — encriptadas en DB
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Usuario admin</label>
+            <input className="input" placeholder="admin@sistema.com" {...register('adminUser')} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Contraseña admin {isEdit && '(dejar vacío = no cambiar)'}
+            </label>
+            <input type="password" className="input" placeholder={isEdit ? '••••••••' : 'Contraseña'} {...register('adminPassword')} />
+          </div>
         </div>
       </div>
 

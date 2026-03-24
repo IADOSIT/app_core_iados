@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { query } from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { encrypt, decrypt } from '../utils/vault';
 
 export const getClients = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -23,7 +24,12 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
 
     params.push(Number(limit), offset);
     const result = await query(
-      `SELECT c.*, u.first_name as assigned_first, u.last_name as assigned_last,
+      `SELECT c.id, c.type, c.status, c.company_name, c.rfc, c.industry, c.website,
+              c.first_name, c.last_name, c.email, c.phone, c.whatsapp,
+              c.address, c.city, c.state, c.country, c.postal_code,
+              c.profit_person_count, c.notes, c.created_at, c.updated_at,
+              c.admin_user, (c.admin_password_enc IS NOT NULL AND c.admin_password_enc != '') as has_admin_password,
+              u.first_name as assigned_first, u.last_name as assigned_last,
               (SELECT COUNT(*) FROM licenses l WHERE l.client_id = c.id AND l.status = 'activa') as active_licenses,
               (SELECT COUNT(*) FROM payments p WHERE p.client_id = c.id AND p.status = 'pendiente') as pending_payments,
               (
@@ -97,18 +103,21 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<voi
       firstName, lastName, email, phone, whatsapp,
       address, city, state, country, postalCode,
       profitPersonCount, assignedTo, notes,
+      adminUser, adminPassword,
     } = req.body;
+    const encPwd = adminPassword ? encrypt(adminPassword) : null;
 
     const result = await query(
       `INSERT INTO clients (type, status, company_name, rfc, industry, website,
         first_name, last_name, email, phone, whatsapp, address, city, state, country, postal_code,
-        profit_person_count, assigned_to, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+        profit_person_count, assigned_to, notes, admin_user, admin_password_enc)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
        RETURNING *`,
       [type, status || 'prospecto', companyName, rfc, industry, website,
        firstName, lastName, email, phone, whatsapp,
        address, city, state, country || 'México', postalCode,
-       profitPersonCount || 2, assignedTo || req.user?.userId, notes]
+       profitPersonCount || 2, assignedTo || req.user?.userId, notes,
+       adminUser || null, encPwd]
     );
 
     // Log actividad
@@ -131,19 +140,25 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<voi
       firstName, lastName, email, phone, whatsapp,
       address, city, state, country, postalCode,
       profitPersonCount, assignedTo, notes,
+      adminUser, adminPassword,
     } = req.body;
+    const encPwd = adminPassword && adminPassword !== '••••••••' ? encrypt(adminPassword) : undefined;
 
     const result = await query(
       `UPDATE clients SET
         type=$1, status=$2, company_name=$3, rfc=$4, industry=$5, website=$6,
         first_name=$7, last_name=$8, email=$9, phone=$10, whatsapp=$11,
         address=$12, city=$13, state=$14, country=$15, postal_code=$16,
-        profit_person_count=$17, assigned_to=$18, notes=$19, updated_at=NOW()
-       WHERE id=$20 RETURNING *`,
+        profit_person_count=$17, assigned_to=$18, notes=$19,
+        admin_user=$20,
+        admin_password_enc = COALESCE($21, admin_password_enc),
+        updated_at=NOW()
+       WHERE id=$22 RETURNING *`,
       [type, status, companyName, rfc, industry, website,
        firstName, lastName, email, phone, whatsapp,
        address, city, state, country, postalCode,
-       profitPersonCount, assignedTo, notes, id]
+       profitPersonCount, assignedTo, notes,
+       adminUser || null, encPwd || null, id]
     );
 
     if (result.rowCount === 0) {
@@ -164,6 +179,18 @@ export const deleteClient = async (req: AuthRequest, res: Response): Promise<voi
     res.json({ success: true, message: 'Cliente desactivado correctamente' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error al eliminar cliente' });
+  }
+};
+
+export const revealClientPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(`SELECT admin_password_enc FROM clients WHERE id=$1`, [id]);
+    if (!result.rows.length) { res.status(404).json({ success: false, message: 'Cliente no encontrado' }); return; }
+    const plain = decrypt(result.rows[0].admin_password_enc || '');
+    res.json({ success: true, password: plain });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al obtener contraseña' });
   }
 };
 
