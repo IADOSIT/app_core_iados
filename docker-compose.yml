@@ -8,11 +8,36 @@ services:
     container_name: core_iados_backend
     ports:
       - "4000:4000"
-#    env_file:
-#      - .env.production
     environment:
-      NODE_ENV: production
+      # Server
       PORT: 4000
+      NODE_ENV: production
+      FRONTEND_URL: https://core.iados.online
+      
+      # Database
+      DB_HOST: pg.bodegadigital.com.mx
+      DB_PORT: 5432
+      DB_NAME: core_iados
+      DB_USER: administrador
+      DB_PASSWORD: YOUR_DB_PASSWORD_HERE
+      DB_SSL: "true"
+      
+      # JWT
+      JWT_SECRET: CHANGE_THIS_TO_A_STRONG_RANDOM_SECRET
+      JWT_REFRESH_SECRET: CHANGE_THIS_TO_ANOTHER_STRONG_SECRET
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      
+      # Email (SMTP)
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: your_email@gmail.com
+      SMTP_PASS: your_app_password
+      EMAIL_FROM: Core iados <noreply@iados.mx>
+      
+      # App
+      APP_NAME: Core iados CRM
+      ADMIN_EMAIL: admin@iados.mx
     volumes:
       - backend_backups:/app/backups
     restart: unless-stopped
