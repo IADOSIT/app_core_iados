@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, GitBranch, Star, Shield } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus, GitBranch, Star, Shield, Trash2, Users } from 'lucide-react';
 import { versionsApi, productsApi } from '../../services/api';
+import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import EmptyState from '../../components/ui/EmptyState';
@@ -13,6 +14,17 @@ export default function VersionsPage() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [productFilter, setProductFilter] = useState('');
+
+  const deleteVersion = useMutation({
+    mutationFn: (id: string) => versionsApi.delete(id),
+    onSuccess: () => { toast.success('Versión eliminada'); qc.invalidateQueries({ queryKey: ['versions'] }); },
+    onError: () => toast.error('Error al eliminar versión'),
+  });
+
+  const handleDelete = (v: SoftwareVersion) => {
+    if (!window.confirm(`¿Eliminar v${v.version}${v.versionName ? ` (${v.versionName})` : ''}? Esta acción no se puede deshacer.`)) return;
+    deleteVersion.mutate(v.id);
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['versions', productFilter],
@@ -53,18 +65,41 @@ export default function VersionsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {versions.map((v) => (
             <div key={v.id} className="card p-4 space-y-3">
+              {/* Product tag */}
+              <div className="flex items-center justify-between">
+                <span
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold"
+                  style={{
+                    background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+                    color: 'var(--accent)',
+                    border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+                  }}
+                >
+                  <GitBranch size={10} /> {(v as any).productName || 'Sin sistema'}
+                </span>
+                <button
+                  onClick={() => handleDelete(v)}
+                  className="w-6 h-6 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}
+                  title="Eliminar versión"
+                  disabled={deleteVersion.isPending}
+                >
+                  <Trash2 size={11} />
+                </button>
+              </div>
+
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,230,118,0.1)' }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(0,230,118,0.1)' }}>
                     <GitBranch size={15} style={{ color: '#00E676' }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-sm font-bold text-primary-300">v{v.version}</span>
-                      {v.isLatest && <Star size={12} className="text-yellow-400" fill="currentColor" />}
-                      {v.isStable && <Shield size={12} className="text-green-400" />}
+                      <span className="font-mono text-sm font-bold" style={{ color: 'var(--accent)' }}>v{v.version}</span>
+                      {v.isLatest && <Star size={12} style={{ color: '#F59E0B' }} fill="currentColor" />}
+                      {v.isStable && <Shield size={12} style={{ color: '#10B981' }} />}
                     </div>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{v.productName}</p>
+                    {v.versionName && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{v.versionName}</p>}
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -73,7 +108,6 @@ export default function VersionsPage() {
                 </div>
               </div>
 
-              {v.versionName && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{v.versionName}</p>}
               {v.releaseNotes && (
                 <p className="text-xs line-clamp-2 p-2 rounded-lg" style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.03)' }}>
                   {v.releaseNotes}
@@ -81,7 +115,12 @@ export default function VersionsPage() {
               )}
 
               <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
-                <span>Licencias: {v.licenseCount || 0}</span>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1">
+                    <Users size={10} /> {(v as any).clientCount || 0} clientes
+                  </span>
+                  <span>{v.licenseCount || 0} lic. activas</span>
+                </div>
                 <span>{v.releasedAt ? formatDate(v.releasedAt) : formatDate(v.createdAt)}</span>
               </div>
             </div>

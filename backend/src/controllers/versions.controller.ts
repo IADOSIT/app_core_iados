@@ -11,7 +11,8 @@ export const getVersions = async (req: AuthRequest, res: Response): Promise<void
 
     const result = await query(
       `SELECT sv.*, p.name as product_name,
-              (SELECT COUNT(*) FROM licenses l WHERE l.version_id = sv.id) as license_count
+              (SELECT COUNT(*) FROM licenses l WHERE l.version_id = sv.id AND l.status = 'activa') as license_count,
+              (SELECT COUNT(DISTINCT cvh.client_id) FROM client_version_history cvh WHERE cvh.version_id = sv.id) as client_count
        FROM software_versions sv
        LEFT JOIN products p ON sv.product_id = p.id
        ${where} ORDER BY sv.created_at DESC`,
@@ -68,6 +69,20 @@ export const updateVersion = async (req: AuthRequest, res: Response): Promise<vo
     res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error al actualizar versión' });
+  }
+};
+
+export const deleteVersion = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(`DELETE FROM software_versions WHERE id=$1 RETURNING id`, [id]);
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Versión no encontrada' });
+      return;
+    }
+    res.json({ success: true, message: 'Versión eliminada' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al eliminar versión' });
   }
 };
 

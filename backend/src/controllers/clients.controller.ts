@@ -28,6 +28,7 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
               c.first_name, c.last_name, c.email, c.phone, c.whatsapp,
               c.address, c.city, c.state, c.country, c.postal_code,
               c.profit_person_count, c.notes, c.created_at, c.updated_at,
+              c.payment_cutoff_day, c.formal_start_date, c.demo_start_date, c.demo_end_date,
               c.admin_user, (c.admin_password_enc IS NOT NULL AND c.admin_password_enc != '') as has_admin_password,
               u.first_name as assigned_first, u.last_name as assigned_last,
               (SELECT COUNT(*) FROM licenses l WHERE l.client_id = c.id AND l.status = 'activa') as active_licenses,
@@ -104,20 +105,23 @@ export const createClient = async (req: AuthRequest, res: Response): Promise<voi
       address, city, state, country, postalCode,
       profitPersonCount, assignedTo, notes,
       adminUser, adminPassword,
+      paymentCutoffDay, formalStartDate, demoStartDate, demoEndDate,
     } = req.body;
     const encPwd = adminPassword ? encrypt(adminPassword) : null;
 
     const result = await query(
       `INSERT INTO clients (type, status, company_name, rfc, industry, website,
         first_name, last_name, email, phone, whatsapp, address, city, state, country, postal_code,
-        profit_person_count, assigned_to, notes, admin_user, admin_password_enc)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+        profit_person_count, assigned_to, notes, admin_user, admin_password_enc,
+        payment_cutoff_day, formal_start_date, demo_start_date, demo_end_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
        RETURNING *`,
       [type, status || 'prospecto', companyName, rfc, industry, website,
        firstName, lastName, email, phone, whatsapp,
        address, city, state, country || 'México', postalCode,
        profitPersonCount || 2, assignedTo || req.user?.userId, notes,
-       adminUser || null, encPwd]
+       adminUser || null, encPwd,
+       paymentCutoffDay || null, formalStartDate || null, demoStartDate || null, demoEndDate || null]
     );
 
     // Log actividad
@@ -141,6 +145,7 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<voi
       address, city, state, country, postalCode,
       profitPersonCount, assignedTo, notes,
       adminUser, adminPassword,
+      paymentCutoffDay, formalStartDate, demoStartDate, demoEndDate,
     } = req.body;
     const encPwd = adminPassword && adminPassword !== '••••••••' ? encrypt(adminPassword) : undefined;
 
@@ -152,13 +157,16 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<voi
         profit_person_count=$17, assigned_to=$18, notes=$19,
         admin_user=$20,
         admin_password_enc = COALESCE($21, admin_password_enc),
+        payment_cutoff_day=$22, formal_start_date=$23, demo_start_date=$24, demo_end_date=$25,
         updated_at=NOW()
-       WHERE id=$22 RETURNING *`,
+       WHERE id=$26 RETURNING *`,
       [type, status, companyName, rfc, industry, website,
        firstName, lastName, email, phone, whatsapp,
        address, city, state, country, postalCode,
        profitPersonCount, assignedTo, notes,
-       adminUser || null, encPwd || null, id]
+       adminUser || null, encPwd || null,
+       paymentCutoffDay || null, formalStartDate || null, demoStartDate || null, demoEndDate || null,
+       id]
     );
 
     if (result.rowCount === 0) {
@@ -175,8 +183,14 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<voi
 export const deleteClient = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await query('UPDATE clients SET status = $1, updated_at = NOW() WHERE id = $2', ['inactivo', id]);
-    res.json({ success: true, message: 'Cliente desactivado correctamente' });
+    // Cascade-delete related records first
+    await query('DELETE FROM client_version_history WHERE client_id = $1', [id]);
+    await query('DELETE FROM client_contacts WHERE client_id = $1', [id]);
+    await query('DELETE FROM licenses WHERE client_id = $1', [id]);
+    await query('DELETE FROM payments WHERE client_id = $1', [id]);
+    await query('DELETE FROM invoices WHERE client_id = $1', [id]);
+    await query('DELETE FROM clients WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Cliente eliminado permanentemente' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error al eliminar cliente' });
   }

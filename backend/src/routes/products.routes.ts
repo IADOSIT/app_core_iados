@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  getProducts, createProduct, updateProduct, addPlan, regenerateApiSecret,
+  getProducts, createProduct, updateProduct, deleteProduct, addPlan, regenerateApiSecret,
   getNotes, addNote, deleteNote, revealAdminPassword,
 } from '../controllers/products.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
@@ -11,6 +11,7 @@ router.use(authenticate);
 router.get('/', getProducts);
 router.post('/', createProduct);
 router.put('/:id', updateProduct);
+router.delete('/:id', deleteProduct);
 router.post('/:id/plans', addPlan);
 router.post('/:id/regenerate-secret', regenerateApiSecret);
 

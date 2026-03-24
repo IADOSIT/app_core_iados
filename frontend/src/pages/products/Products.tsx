@@ -260,6 +260,17 @@ export default function ProductsPage() {
     onError: () => toast.error('Error al regenerar secret'),
   });
 
+  const deleteProduct = useMutation({
+    mutationFn: (id: string) => productsApi.delete(id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); toast.success('Producto desactivado'); },
+    onError: () => toast.error('Error al desactivar producto'),
+  });
+
+  const handleDeleteProduct = (product: Product) => {
+    if (!window.confirm(`¿Desactivar "${product.name}"? Dejará de aparecer en la lista. Esta acción se puede revertir desde la base de datos.`)) return;
+    deleteProduct.mutate(product.id);
+  };
+
   const products: Product[] = data?.data?.data || [];
 
   return (
@@ -308,7 +319,17 @@ export default function ProductsPage() {
                     )}
                   </div>
                 </div>
-                <button onClick={() => setEditProduct(product)} className="btn-ghost py-1 px-2 text-xs flex-shrink-0">Editar</button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => setEditProduct(product)} className="btn-ghost py-1 px-2 text-xs">Editar</button>
+                  <button
+                    onClick={() => handleDeleteProduct(product)}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                    style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}
+                    title="Desactivar producto"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
 
               {/* Botón Acceder */}

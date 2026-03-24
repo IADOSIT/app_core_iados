@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, CreditCard, CheckCircle, Pencil, X } from 'lucide-react';
+import { Plus, CreditCard, CheckCircle, Pencil, Trash2 } from 'lucide-react';
 import { paymentsApi } from '../../services/api';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -31,12 +31,12 @@ export default function PaymentsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => paymentsApi.delete(id),
-    onSuccess: () => { toast.success('Pago cancelado'); qc.invalidateQueries({ queryKey: ['payments'] }); },
-    onError: () => toast.error('Error al cancelar el pago'),
+    onSuccess: () => { toast.success('Pago eliminado'); qc.invalidateQueries({ queryKey: ['payments'] }); },
+    onError: () => toast.error('Error al eliminar el pago'),
   });
 
   const handleDelete = (pay: Payment) => {
-    if (!window.confirm('¿Cancelar este pago?')) return;
+    if (!window.confirm(`¿Eliminar este pago permanentemente? Esta acción no se puede deshacer.`)) return;
     deleteMutation.mutate(pay.id);
   };
 
@@ -124,17 +124,15 @@ export default function PaymentsPage() {
                         >
                           <Pencil size={13} />
                         </button>
-                        {pay.status === 'pendiente' && (
-                          <button
-                            onClick={() => handleDelete(pay)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
-                            title="Cancelar pago"
-                            disabled={deleteMutation.isPending}
-                          >
-                            <X size={13} />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleDelete(pay)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}
+                          title="Eliminar pago"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </td>
                   </tr>

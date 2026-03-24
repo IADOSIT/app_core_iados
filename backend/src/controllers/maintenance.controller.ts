@@ -260,7 +260,7 @@ export const deleteDemoData = async (req: Request, res: Response) => {
       deleted.push('clientes');
     }
     if (all || sections.versions) {
-      await query(`DELETE FROM versions WHERE release_notes LIKE '%[SEED]%'`);
+      await query(`DELETE FROM software_versions WHERE release_notes LIKE '%[SEED]%'`);
       deleted.push('versiones');
     }
     if (all || sections.expenses) {
@@ -285,7 +285,7 @@ export const getSystemStats = async (_req: Request, res: Response) => {
       query('SELECT COUNT(*) FROM payments'),
       query('SELECT COUNT(*) FROM invoices'),
       query('SELECT COUNT(*) FROM expenses'),
-      query('SELECT COUNT(*) FROM versions'),
+      query('SELECT COUNT(*) FROM software_versions'),
     ]);
     res.json({
       success: true,

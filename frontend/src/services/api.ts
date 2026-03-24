@@ -120,6 +120,7 @@ export const productsApi = {
   getAll: () => api.get('/products'),
   create: (data: Record<string, unknown>) => api.post('/products', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/products/${id}`, data),
+  delete: (id: string) => api.delete(`/products/${id}`),
   addPlan: (id: string, data: Record<string, unknown>) => api.post(`/products/${id}/plans`, data),
   regenerateSecret: (id: string) => api.post(`/products/${id}/regenerate-secret`),
   revealPassword: (id: string) => api.get(`/products/${id}/reveal-password`),
@@ -135,6 +136,7 @@ export const versionsApi = {
   getAll: (productId?: string) => api.get('/versions', { params: { productId } }),
   create: (data: Record<string, unknown>) => api.post('/versions', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/versions/${id}`, data),
+  delete: (id: string) => api.delete(`/versions/${id}`),
   assign: (data: Record<string, unknown>) => api.post('/versions/assign', data),
 };
 

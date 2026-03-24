@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Users, Building2, User, ExternalLink, Pencil, Package, Lock, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Users, Building2, User, ExternalLink, Pencil, Package, Lock, Eye, EyeOff, Trash2, Calendar, CalendarCheck } from 'lucide-react';
 import { clientsApi } from '../../services/api';
 import toast from 'react-hot-toast';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -53,6 +53,18 @@ export default function ClientsPage() {
   const [type, setType] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => clientsApi.delete(id),
+    onSuccess: () => { toast.success('Cliente eliminado'); qc.invalidateQueries({ queryKey: ['clients'] }); },
+    onError: () => toast.error('Error al eliminar cliente'),
+  });
+
+  const handleDelete = (client: Client) => {
+    const name = (client as any).companyName || `${client.firstName || ''} ${client.lastName || ''}`.trim() || client.email;
+    if (!window.confirm(`¿Eliminar permanentemente a "${name}"?\n\nSe eliminarán también sus licencias, pagos y facturas. Esta acción NO se puede deshacer.`)) return;
+    deleteMutation.mutate(client.id);
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients', page, search, status, type],
@@ -131,8 +143,9 @@ export default function ClientsPage() {
                   <th>Cliente</th>
                   <th>Sistema(s) activo(s)</th>
                   <th>Estado</th>
+                  <th>Corte / Inicio</th>
                   <th>Pagos Pend.</th>
-                  <th>Creado</th>
+                  <th>Registro</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -188,6 +201,28 @@ export default function ClientsPage() {
                     </td>
                     <td><StatusBadge status={client.status} /></td>
                     <td>
+                      <div className="space-y-0.5">
+                        {(client as any).payment_cutoff_day && (
+                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            <Calendar size={10} style={{ color: '#F59E0B', flexShrink: 0 }} />
+                            Día {(client as any).payment_cutoff_day}
+                          </div>
+                        )}
+                        {(client as any).formal_start_date && (
+                          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                            <CalendarCheck size={10} style={{ flexShrink: 0 }} />
+                            {formatDate((client as any).formal_start_date)}
+                          </div>
+                        )}
+                        {(client as any).demo_end_date && new Date((client as any).demo_end_date) > new Date() && (
+                          <span className="badge badge-blue text-xs">Demo activo</span>
+                        )}
+                        {!(client as any).payment_cutoff_day && !(client as any).formal_start_date && (
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
                       {(client.pendingPayments || 0) > 0 ? (
                         <span className="badge badge-yellow">{client.pendingPayments}</span>
                       ) : (
@@ -210,6 +245,15 @@ export default function ClientsPage() {
                           title="Editar cliente"
                         >
                           <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(client)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'rgba(239,68,68,0.08)', color: '#EF4444' }}
+                          title="Eliminar cliente"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>

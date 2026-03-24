@@ -99,6 +99,23 @@ export const revealAdminPassword = async (req: AuthRequest, res: Response): Prom
   }
 };
 
+export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(
+      `UPDATE products SET is_active=false, updated_at=NOW() WHERE id=$1 RETURNING id`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Producto no encontrado' });
+      return;
+    }
+    res.json({ success: true, message: 'Producto desactivado' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al eliminar producto' });
+  }
+};
+
 // ── Notes ────────────────────────────────────────────────────────────────────
 
 export const getNotes = async (req: AuthRequest, res: Response): Promise<void> => {

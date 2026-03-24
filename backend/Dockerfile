@@ -18,6 +18,9 @@ RUN npm ci --only=production
 
 COPY --from=builder /app/dist ./dist
 
+# Install postgresql-client for pg_dump
+RUN apk add --no-cache postgresql-client
+
 # Create backups directory
 RUN mkdir -p /app/backups
 

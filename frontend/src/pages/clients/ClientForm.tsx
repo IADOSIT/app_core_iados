@@ -36,6 +36,10 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       notes: client?.notes || '',
       adminUser: (client as any)?.adminUser || '',
       adminPassword: '',
+      paymentCutoffDay: (client as any)?.payment_cutoff_day || '',
+      formalStartDate: (client as any)?.formal_start_date?.split('T')[0] || '',
+      demoStartDate: (client as any)?.demo_start_date?.split('T')[0] || '',
+      demoEndDate: (client as any)?.demo_end_date?.split('T')[0] || '',
     },
   });
 
@@ -164,6 +168,29 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       <div>
         <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Notas</label>
         <textarea className="input resize-none" rows={2} placeholder="Información adicional..." {...register('notes')} />
+      </div>
+
+      {/* Fechas importantes */}
+      <div className="rounded-xl p-3 space-y-3" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.18)' }}>
+        <p className="text-xs font-semibold" style={{ color: '#3B82F6' }}>Fechas y periodo</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Día de corte (1-31)</label>
+            <input type="number" min={1} max={31} className="input" placeholder="ej. 15" {...register('paymentCutoffDay', { valueAsNumber: true })} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Fecha ingreso formal</label>
+            <input type="date" className="input" {...register('formalStartDate')} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Inicio periodo demo</label>
+            <input type="date" className="input" {...register('demoStartDate')} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Fin periodo demo</label>
+            <input type="date" className="input" {...register('demoEndDate')} />
+          </div>
+        </div>
       </div>
 
       {/* Vault credenciales del cliente */}
