@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Search, UserPlus, Mail, Phone, Calendar, FileText,
   Pencil, Trash2, ChevronDown, ChevronUp, AlertCircle,
-  TrendingUp, DollarSign, Clock, Tag,
+  TrendingUp, DollarSign, Clock, Tag, User,
 } from 'lucide-react';
 import { prospectsApi } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -35,6 +35,8 @@ interface Prospect {
   phone?: string;
   source: string;
   status: string;
+  assignedTo?: string;
+  assignedName?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -133,6 +135,9 @@ function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onD
           )}
           {prospect.phone && <span className="flex items-center gap-1"><Phone size={10} />{prospect.phone}</span>}
           <span className="flex items-center gap-1"><Tag size={10} />{SOURCE_LABELS[prospect.source] || prospect.source}</span>
+          {prospect.assignedName && (
+            <span className="flex items-center gap-1"><User size={10} />{prospect.assignedName}</span>
+          )}
           <span className="flex items-center gap-1"><Clock size={10} />{formatDate(prospect.createdAt)}</span>
         </div>
       </div>

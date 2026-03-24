@@ -42,6 +42,8 @@ function mapProspect(p: any, quotes?: any[]) {
     phone: p.phone,
     source: p.source,
     status: p.status,
+    assignedTo: p.assigned_to,
+    assignedName: p.assigned_first ? `${p.assigned_first} ${p.assigned_last || ''}`.trim() : null,
     notes: p.notes,
     createdAt: p.created_at,
     updatedAt: p.updated_at,
@@ -72,6 +74,7 @@ export const getProspects = async (req: AuthRequest, res: Response): Promise<voi
 
     const result = await query(`
       SELECT p.*,
+        u.first_name as assigned_first, u.last_name as assigned_last,
         (SELECT COUNT(*) FROM prospect_quotes q WHERE q.prospect_id = p.id) as quotes_count,
         lq.id as lq_id,
         lq.quote_number as lq_quote_number,
@@ -83,6 +86,7 @@ export const getProspects = async (req: AuthRequest, res: Response): Promise<voi
         lq.validity_date as lq_validity_date,
         lq.status as lq_status
       FROM prospects p
+      LEFT JOIN users u ON p.assigned_to = u.id
       LEFT JOIN LATERAL (
         SELECT * FROM prospect_quotes WHERE prospect_id = p.id ORDER BY created_at DESC LIMIT 1
       ) lq ON true
@@ -101,7 +105,8 @@ export const getProspect = async (req: AuthRequest, res: Response): Promise<void
   try {
     const { id } = req.params;
     const [pRes, qRes] = await Promise.all([
-      query('SELECT * FROM prospects WHERE id = $1', [id]),
+      query(`SELECT p.*, u.first_name as assigned_first, u.last_name as assigned_last
+             FROM prospects p LEFT JOIN users u ON p.assigned_to = u.id WHERE p.id = $1`, [id]),
       query('SELECT * FROM prospect_quotes WHERE prospect_id = $1 ORDER BY created_at DESC', [id]),
     ]);
     if (!pRes.rowCount) { res.status(404).json({ success: false, message: 'Prospecto no encontrado' }); return; }
@@ -113,13 +118,13 @@ export const getProspect = async (req: AuthRequest, res: Response): Promise<void
 
 export const createProspect = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, contactName, email, phone, source, status, notes, quote } = req.body;
+    const { name, contactName, email, phone, source, status, assignedTo, notes, quote } = req.body;
 
     const pRes = await query(
-      `INSERT INTO prospects (name, contact_name, email, phone, source, status, notes, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      `INSERT INTO prospects (name, contact_name, email, phone, source, status, assigned_to, notes, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [name, contactName || null, email || null, phone || null,
-       source || 'directo', status || 'nuevo', notes || null, req.user?.userId]
+       source || 'directo', status || 'nuevo', assignedTo || null, notes || null, req.user?.userId]
     );
     const prospect = pRes.rows[0];
 
@@ -150,13 +155,13 @@ export const createProspect = async (req: AuthRequest, res: Response): Promise<v
 export const updateProspect = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, contactName, email, phone, source, status, notes } = req.body;
+    const { name, contactName, email, phone, source, status, assignedTo, notes } = req.body;
 
     const result = await query(
-      `UPDATE prospects SET name=$1, contact_name=$2, email=$3, phone=$4, source=$5, status=$6, notes=$7, updated_at=NOW()
-       WHERE id=$8 RETURNING *`,
+      `UPDATE prospects SET name=$1, contact_name=$2, email=$3, phone=$4, source=$5, status=$6, assigned_to=$7, notes=$8, updated_at=NOW()
+       WHERE id=$9 RETURNING *`,
       [name, contactName || null, email || null, phone || null,
-       source || 'directo', status, notes || null, id]
+       source || 'directo', status, assignedTo || null, notes || null, id]
     );
 
     if (!result.rowCount) { res.status(404).json({ success: false, message: 'Prospecto no encontrado' }); return; }

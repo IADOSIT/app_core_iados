@@ -16,6 +16,7 @@ async function migrateProspects() {
         phone VARCHAR(50),
         source VARCHAR(50) DEFAULT 'directo',
         status VARCHAR(50) DEFAULT 'nuevo',
+        assigned_to UUID REFERENCES users(id),
         notes TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW(),

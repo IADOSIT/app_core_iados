@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { prospectsApi } from '../../services/api';
+import { prospectsApi, usersApi } from '../../services/api';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -13,6 +13,7 @@ interface Prospect {
   phone?: string;
   source: string;
   status: string;
+  assignedTo?: string;
   notes?: string;
 }
 
@@ -27,6 +28,13 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
   const [showQuote, setShowQuote] = useState(false);
   const lbl = { color: 'var(--text-muted)' };
 
+  const { data: usersData } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersApi.getAll(),
+  });
+  const users: { id: string; first_name?: string; last_name?: string; firstName?: string; lastName?: string }[] =
+    usersData?.data?.data || usersData?.data?.users || [];
+
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       name: prospect?.name || '',
@@ -35,13 +43,13 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
       phone: prospect?.phone || '',
       source: prospect?.source || 'directo',
       status: prospect?.status || 'nuevo',
+      assignedTo: (prospect as any)?.assigned_to || prospect?.assignedTo || '',
       notes: prospect?.notes || '',
-      // Cotización inicial (solo en create)
       quoteNumber: '',
       productsDescription: '',
-      implementationFee: '',
-      licenseFee: '',
-      monthlyFee: '',
+      implementationFee: 0,
+      licenseFee: 0,
+      monthlyFee: 0,
       currency: 'MXN',
       validityDate: '',
       quoteStatus: 'borrador',
@@ -50,58 +58,77 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
   });
 
   const mutation = useMutation({
-    mutationFn: (raw: Record<string, unknown>) => {
-      const data: Record<string, unknown> = {
-        name: raw.name,
-        contactName: raw.contactName || null,
-        email: raw.email || null,
-        phone: raw.phone || null,
-        source: raw.source,
-        status: raw.status,
-        notes: raw.notes || null,
+    mutationFn: (formData: Record<string, unknown>) => {
+      const payload: Record<string, unknown> = {
+        name: formData.name,
+        contactName: formData.contactName || null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        source: formData.source,
+        status: formData.status,
+        assignedTo: formData.assignedTo || null,
+        notes: formData.notes || null,
       };
+
       if (!isEdit && showQuote) {
-        data.quote = {
-          quoteNumber: raw.quoteNumber || null,
-          productsDescription: raw.productsDescription || null,
-          implementationFee: Number(raw.implementationFee) || 0,
-          licenseFee: Number(raw.licenseFee) || 0,
-          monthlyFee: Number(raw.monthlyFee) || 0,
-          currency: raw.currency,
-          validityDate: raw.validityDate || null,
-          status: raw.quoteStatus,
-          notes: raw.quoteNotes || null,
-        };
+        const impl = Number(formData.implementationFee) || 0;
+        const lic = Number(formData.licenseFee) || 0;
+        const monthly = Number(formData.monthlyFee) || 0;
+        if (impl || lic || monthly || formData.productsDescription) {
+          payload.quote = {
+            quoteNumber: formData.quoteNumber || null,
+            productsDescription: formData.productsDescription || null,
+            implementationFee: impl,
+            licenseFee: lic,
+            monthlyFee: monthly,
+            currency: formData.currency,
+            validityDate: formData.validityDate || null,
+            status: formData.quoteStatus,
+            notes: formData.quoteNotes || null,
+          };
+        }
       }
+
       return isEdit
-        ? prospectsApi.update(prospect!.id, data)
-        : prospectsApi.create(data);
+        ? prospectsApi.update(prospect!.id, payload)
+        : prospectsApi.create(payload);
     },
     onSuccess: () => {
       toast.success(isEdit ? 'Prospecto actualizado' : 'Prospecto creado');
       onSuccess();
     },
-    onError: () => toast.error('Error al guardar'),
+    onError: (e: any) => {
+      const msg = e?.response?.data?.message || 'Error al guardar';
+      toast.error(msg);
+    },
   });
 
+  const onSubmit = (data: Record<string, unknown>) => mutation.mutate(data);
+
   return (
-    <form onSubmit={handleSubmit(d => mutation.mutate(d as Record<string, unknown>))} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
       {/* Datos principales */}
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
           <label className="block text-xs font-semibold mb-1.5" style={lbl}>Nombre / Empresa *</label>
-          <input className={`input ${errors.name ? 'border-red-500/50' : ''}`}
-            placeholder="Empresa XYZ o Juan García" {...register('name', { required: true })} />
+          <input
+            className={`input ${errors.name ? 'border-red-500/50' : ''}`}
+            placeholder="Empresa XYZ o Juan García"
+            {...register('name', { required: true })}
+          />
+          {errors.name && <p className="text-xs mt-1 text-red-400">Campo requerido</p>}
         </div>
+
         <div>
-          <label className="block text-xs font-semibold mb-1.5" style={lbl}>Contacto</label>
+          <label className="block text-xs font-semibold mb-1.5" style={lbl}>Persona de contacto</label>
           <input className="input" placeholder="Nombre del contacto" {...register('contactName')} />
         </div>
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={lbl}>Email</label>
           <input type="email" className="input" placeholder="correo@empresa.com" {...register('email')} />
         </div>
+
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={lbl}>Teléfono</label>
           <input className="input" placeholder="+52 55 1234 5678" {...register('phone')} />
@@ -111,39 +138,61 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
           <select className="select" {...register('source')}>
             <option value="directo">Directo</option>
             <option value="referido">Referido</option>
-            <option value="web">Web</option>
-            <option value="llamada">Llamada</option>
-            <option value="evento">Evento</option>
+            <option value="web">Web / Internet</option>
+            <option value="llamada">Llamada en frío</option>
+            <option value="evento">Evento / Feria</option>
             <option value="redes">Redes sociales</option>
           </select>
         </div>
-        <div className="col-span-2">
+
+        <div>
           <label className="block text-xs font-semibold mb-1.5" style={lbl}>Estado</label>
           <select className="select" {...register('status')}>
             <option value="nuevo">Nuevo</option>
             <option value="contactado">Contactado</option>
             <option value="cotizado">Cotizado</option>
-            <option value="negociacion">Negociación</option>
-            <option value="ganado">Ganado</option>
+            <option value="negociacion">En negociación</option>
+            <option value="ganado">Ganado 🎉</option>
             <option value="perdido">Perdido</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={lbl}>Vendedor asignado</label>
+          <select className="select" {...register('assignedTo')}>
+            <option value="">Sin asignar</option>
+            {users.map(u => {
+              const name = (u as any).first_name
+                ? `${(u as any).first_name} ${(u as any).last_name || ''}`.trim()
+                : `${(u as any).firstName || ''} ${(u as any).lastName || ''}`.trim();
+              return (
+                <option key={u.id} value={u.id}>{name || u.id}</option>
+              );
+            })}
+          </select>
+        </div>
+
         <div className="col-span-2">
           <label className="block text-xs font-semibold mb-1.5" style={lbl}>Notas</label>
-          <textarea className="input resize-none" rows={2} placeholder="Necesidades, comentarios..." {...register('notes')} />
+          <textarea className="input resize-none" rows={2}
+            placeholder="Necesidades, intereses, comentarios..."
+            {...register('notes')} />
         </div>
       </div>
 
-      {/* Cotización inicial (solo al crear) */}
+      {/* Cotización inicial — solo al crear */}
       {!isEdit && (
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
+        <div className="rounded-xl overflow-hidden"
+          style={{ border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
           <button type="button" onClick={() => setShowQuote(!showQuote)}
             className="w-full flex items-center justify-between px-4 py-3 text-left"
             style={{ background: 'color-mix(in srgb, var(--accent) 6%, transparent)' }}>
             <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
-              + Agregar cotización inicial (opcional)
+              {showQuote ? 'Cotización inicial' : '+ Agregar cotización inicial (opcional)'}
             </span>
-            {showQuote ? <ChevronUp size={14} style={{ color: 'var(--accent)' }} /> : <ChevronDown size={14} style={{ color: 'var(--accent)' }} />}
+            {showQuote
+              ? <ChevronUp size={14} style={{ color: 'var(--accent)' }} />
+              : <ChevronDown size={14} style={{ color: 'var(--accent)' }} />}
           </button>
 
           {showQuote && (
@@ -154,11 +203,11 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
                   <input className="input" placeholder="COT-2024-001" {...register('quoteNumber')} />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={lbl}>Vigencia hasta</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={lbl}>Vigente hasta</label>
                   <input type="date" className="input" {...register('validityDate')} />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold mb-1.5" style={lbl}>Descripción de productos/servicios</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={lbl}>Descripción de productos / servicios</label>
                   <textarea className="input resize-none" rows={2}
                     placeholder="Ej: Sistema de inventario + módulo de ventas..."
                     {...register('productsDescription')} />
@@ -171,22 +220,22 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={lbl}>Implementación / Setup</label>
                     <input type="number" min="0" step="100" className="input" placeholder="0"
-                      {...register('implementationFee')} />
+                      {...register('implementationFee', { valueAsNumber: true })} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={lbl}>Licencia única (one-time)</label>
                     <input type="number" min="0" step="100" className="input" placeholder="0"
-                      {...register('licenseFee')} />
+                      {...register('licenseFee', { valueAsNumber: true })} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={lbl}>Mensualidad</label>
                     <input type="number" min="0" step="100" className="input" placeholder="0"
-                      {...register('monthlyFee')} />
+                      {...register('monthlyFee', { valueAsNumber: true })} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1.5" style={lbl}>Moneda</label>
                     <select className="select" {...register('currency')}>
-                      <option value="MXN">MXN — Pesos mexicanos</option>
+                      <option value="MXN">MXN — Pesos</option>
                       <option value="USD">USD — Dólares</option>
                     </select>
                   </div>
@@ -200,13 +249,14 @@ export default function ProspectForm({ prospect, onSuccess, onCancel }: Props) {
                     <option value="borrador">Borrador</option>
                     <option value="enviada">Enviada</option>
                     <option value="vista">Vista por el cliente</option>
-                    <option value="aceptada">Aceptada</option>
+                    <option value="aceptada">Aceptada ✓</option>
                     <option value="rechazada">Rechazada</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5" style={lbl}>Notas cotización</label>
-                  <input className="input" placeholder="Descuentos, condiciones..." {...register('quoteNotes')} />
+                  <input className="input" placeholder="Descuentos, condiciones..."
+                    {...register('quoteNotes')} />
                 </div>
               </div>
             </div>
