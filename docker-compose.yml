@@ -15,7 +15,7 @@ services:
       FRONTEND_URL: https://core.iados.online
 
       # Database
-      DB_HOST: 74.208.149.7
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: core_iados
       DB_USER: administrador
