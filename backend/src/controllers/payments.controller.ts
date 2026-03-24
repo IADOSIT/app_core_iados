@@ -141,14 +141,14 @@ export const getProjection = async (req: AuthRequest, res: Response): Promise<vo
              c.payment_cutoff_day,
              (SELECT COALESCE(SUM(pay.amount_mxn), 0)
               FROM payments pay
-              WHERE pay.license_id = l.id
+              WHERE (pay.license_id = l.id OR (pay.license_id IS NULL AND pay.client_id = l.client_id))
                 AND pay.status = 'completado'
                 AND EXTRACT(MONTH FROM pay.paid_at) = $1
                 AND EXTRACT(YEAR FROM pay.paid_at) = $2
              ) as paid_this_month,
              (SELECT COALESCE(SUM(pay.amount_mxn), 0)
               FROM payments pay
-              WHERE pay.license_id = l.id
+              WHERE (pay.license_id = l.id OR (pay.license_id IS NULL AND pay.client_id = l.client_id))
                 AND pay.status = 'pendiente'
                 AND EXTRACT(MONTH FROM COALESCE(pay.due_date, pay.created_at)) = $1
                 AND EXTRACT(YEAR FROM COALESCE(pay.due_date, pay.created_at)) = $2
