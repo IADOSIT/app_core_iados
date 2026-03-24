@@ -42,8 +42,7 @@ services:
       - backend_backups:/app/backups
     restart: unless-stopped
     networks:
-      - internal
-      - internet_out # bridge propio → NAT del host → fetch a internet funciona
+      - web_network
     healthcheck:
       test: [ "CMD", "wget", "-qO-", "http://localhost:4000/health" ]
       interval: 30s
@@ -63,7 +62,7 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - internal
+      - web_network
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
     restart: unless-stopped
@@ -73,8 +72,5 @@ volumes:
     name: core_iados_backups
 
 networks:
-  internal:
-    name: core_iados_internal
-  internet_out:
-    name: core_iados_internet
-    driver: bridge # el host hace masquerade → salida a internet para fetch()
+  web_network:
+    external: true
