@@ -48,7 +48,7 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 
 export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, description, basePriceMxn, basePriceUsd, apiSlug, systemUrl, adminUser, adminPassword, accessUrl } = req.body;
+    const { name, description, basePriceMxn, basePriceUsd, apiSlug, systemUrl, adminUser, adminPassword, accessUrl, plans } = req.body;
     const encPwd = adminPassword ? encrypt(adminPassword) : null;
 
     const result = await query(
@@ -56,9 +56,18 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [name, description, basePriceMxn || 0, basePriceUsd || 0, apiSlug || null, systemUrl || null, adminUser || null, encPwd, accessUrl || null]
     );
+    const productId = result.rows[0].id;
+
+    // Insert plans bundled with product creation
+    if (Array.isArray(plans) && plans.length > 0) {
+      for (const plan of plans) {
+        await insertPlan(productId, plan);
+      }
+    }
+
     res.status(201).json({ success: true, data: mapProduct(result.rows[0]) });
-  } catch {
-    res.status(500).json({ success: false, message: 'Error al crear producto' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: `Error al crear producto: ${err.message}` });
   }
 };
 
@@ -178,18 +187,24 @@ export const deleteNote = async (req: AuthRequest, res: Response): Promise<void>
 
 // ── Plans / Secret (unchanged) ────────────────────────────────────────────────
 
+async function insertPlan(productId: string, plan: any) {
+  const { name, type, priceMxn, priceUsd, maxUsers, durationDays, features } = plan;
+  const maxUsersVal = maxUsers !== '' && maxUsers != null ? Number(maxUsers) : null;
+  const durationDaysVal = durationDays !== '' && durationDays != null ? Number(durationDays) : null;
+  return query(
+    `INSERT INTO product_plans (product_id, name, type, price_mxn, price_usd, max_users, duration_days, features)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [productId, name, type, priceMxn || 0, priceUsd || 0, maxUsersVal, durationDaysVal, JSON.stringify(features || [])]
+  );
+}
+
 export const addPlan = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, type, priceMxn, priceUsd, maxUsers, durationDays, features } = req.body;
-    const result = await query(
-      `INSERT INTO product_plans (product_id, name, type, price_mxn, price_usd, max_users, duration_days, features)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [id, name, type, priceMxn || 0, priceUsd || 0, maxUsers, durationDays, JSON.stringify(features || [])]
-    );
+    const result = await insertPlan(id, req.body);
     res.status(201).json({ success: true, data: result.rows[0] });
-  } catch {
-    res.status(500).json({ success: false, message: 'Error al agregar plan' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: `Error al agregar plan: ${err.message}` });
   }
 };
 
