@@ -40,6 +40,7 @@ services:
       ADMIN_EMAIL: admin@iados.mx
     volumes:
       - backend_backups:/app/backups
+      - backend_uploads:/app/uploads
     restart: unless-stopped
     networks:
       - web_network
@@ -71,6 +72,8 @@ services:
 volumes:
   backend_backups:
     name: core_iados_backups
+  backend_uploads:
+    name: core_iados_uploads
 
 networks:
   web_network:

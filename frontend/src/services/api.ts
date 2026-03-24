@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://coreapi.iados.online/api/v1';
+export const BACKEND_URL = API_URL.replace(/\/api\/v\d+$/, '');
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -193,6 +194,11 @@ export const prospectsApi = {
   addQuote: (id: string, data: Record<string, unknown>) => api.post(`/prospects/${id}/quotes`, data),
   updateQuote: (id: string, qid: string, data: Record<string, unknown>) => api.put(`/prospects/${id}/quotes/${qid}`, data),
   deleteQuote: (id: string, qid: string) => api.delete(`/prospects/${id}/quotes/${qid}`),
+  uploadQuoteFile: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post('/prospects/upload', fd, { headers: { 'Content-Type': undefined as any } });
+  },
 };
 
 // ========================

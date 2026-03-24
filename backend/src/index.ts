@@ -5,6 +5,8 @@ import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/error.middleware';
@@ -35,6 +37,13 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
+
+// Ensure uploads directory exists
+const uploadsDir = path.join('/app/uploads/quotes');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Serve uploaded files statically (authenticated via frontend, no token check on static)
+app.use('/uploads', express.static('/app/uploads'));
 
 // Health check
 app.get('/health', async (_req, res) => {
@@ -75,10 +84,12 @@ pool.query(`
     validity_date DATE,
     status VARCHAR(50) DEFAULT 'borrador',
     notes TEXT,
+    file_url VARCHAR(500),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by UUID REFERENCES users(id)
   );
+  ALTER TABLE prospect_quotes ADD COLUMN IF NOT EXISTS file_url VARCHAR(500);
 `).catch(e => console.error('Error creando tablas prospects:', e.message));
 
 // API Routes

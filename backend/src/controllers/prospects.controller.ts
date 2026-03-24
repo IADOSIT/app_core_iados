@@ -16,6 +16,7 @@ function mapQuote(q: any) {
     validityDate: q.validity_date,
     status: q.status,
     notes: q.notes,
+    fileUrl: q.file_url || null,
     createdAt: q.created_at,
     updatedAt: q.updated_at,
   };
@@ -32,6 +33,7 @@ function mapProspect(p: any, quotes?: any[]) {
     currency: p.lq_currency || 'MXN',
     validityDate: p.lq_validity_date,
     status: p.lq_status,
+    fileUrl: p.lq_file_url || null,
   } : null;
 
   return {
@@ -84,7 +86,8 @@ export const getProspects = async (req: AuthRequest, res: Response): Promise<voi
         lq.monthly_fee as lq_monthly_fee,
         lq.currency as lq_currency,
         lq.validity_date as lq_validity_date,
-        lq.status as lq_status
+        lq.status as lq_status,
+        lq.file_url as lq_file_url
       FROM prospects p
       LEFT JOIN users u ON p.assigned_to = u.id
       LEFT JOIN LATERAL (
@@ -185,15 +188,15 @@ export const deleteProspect = async (req: AuthRequest, res: Response): Promise<v
 export const addQuote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { quoteNumber, productsDescription, implementationFee, licenseFee, monthlyFee, currency, exchangeRate, validityDate, status, notes } = req.body;
+    const { quoteNumber, productsDescription, implementationFee, licenseFee, monthlyFee, currency, exchangeRate, validityDate, status, notes, fileUrl } = req.body;
 
     const result = await query(
-      `INSERT INTO prospect_quotes (prospect_id, quote_number, products_description, implementation_fee, license_fee, monthly_fee, currency, exchange_rate, validity_date, status, notes, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+      `INSERT INTO prospect_quotes (prospect_id, quote_number, products_description, implementation_fee, license_fee, monthly_fee, currency, exchange_rate, validity_date, status, notes, file_url, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
       [id, quoteNumber || null, productsDescription || null,
        implementationFee || 0, licenseFee || 0, monthlyFee || 0,
        currency || 'MXN', exchangeRate || 1, validityDate || null,
-       status || 'borrador', notes || null, req.user?.userId]
+       status || 'borrador', notes || null, fileUrl || null, req.user?.userId]
     );
 
     await query(`UPDATE prospects SET status='cotizado', updated_at=NOW() WHERE id=$1 AND status IN ('nuevo','contactado')`, [id]);
@@ -207,15 +210,15 @@ export const addQuote = async (req: AuthRequest, res: Response): Promise<void> =
 export const updateQuote = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id, qid } = req.params;
-    const { quoteNumber, productsDescription, implementationFee, licenseFee, monthlyFee, currency, exchangeRate, validityDate, status, notes } = req.body;
+    const { quoteNumber, productsDescription, implementationFee, licenseFee, monthlyFee, currency, exchangeRate, validityDate, status, notes, fileUrl } = req.body;
 
     const result = await query(
-      `UPDATE prospect_quotes SET quote_number=$1, products_description=$2, implementation_fee=$3, license_fee=$4, monthly_fee=$5, currency=$6, exchange_rate=$7, validity_date=$8, status=$9, notes=$10, updated_at=NOW()
-       WHERE id=$11 AND prospect_id=$12 RETURNING *`,
+      `UPDATE prospect_quotes SET quote_number=$1, products_description=$2, implementation_fee=$3, license_fee=$4, monthly_fee=$5, currency=$6, exchange_rate=$7, validity_date=$8, status=$9, notes=$10, file_url=$11, updated_at=NOW()
+       WHERE id=$12 AND prospect_id=$13 RETURNING *`,
       [quoteNumber || null, productsDescription || null,
        implementationFee || 0, licenseFee || 0, monthlyFee || 0,
        currency || 'MXN', exchangeRate || 1, validityDate || null,
-       status, notes || null, qid, id]
+       status, notes || null, fileUrl !== undefined ? fileUrl : null, qid, id]
     );
 
     if (!result.rowCount) { res.status(404).json({ success: false, message: 'Cotización no encontrada' }); return; }

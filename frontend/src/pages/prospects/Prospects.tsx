@@ -3,9 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Search, UserPlus, Mail, Phone, Calendar, FileText,
   Pencil, Trash2, ChevronDown, ChevronUp, AlertCircle,
-  TrendingUp, DollarSign, Clock, Tag, User,
+  TrendingUp, DollarSign, Clock, Tag, User, Eye, Image, X,
 } from 'lucide-react';
-import { prospectsApi } from '../../services/api';
+import { prospectsApi, BACKEND_URL } from '../../services/api';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -25,6 +25,7 @@ interface Quote {
   validityDate?: string;
   status: string;
   notes?: string;
+  fileUrl?: string | null;
   createdAt: string;
 }
 interface Prospect {
@@ -69,6 +70,13 @@ function fmt(n: number, cur = 'MXN') {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: cur, minimumFractionDigits: 0 }).format(n);
 }
 
+function getFileUrl(path: string | null | undefined) {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${BACKEND_URL}${path}`;
+}
+function isPdf(url: string) { return /\.pdf$/i.test(url); }
+
 function StatusPill({ status }: { status: string }) {
   const c = STATUS_CFG[status] || { label: status, color: '#6B7280', bg: 'rgba(107,114,128,0.12)' };
   return (
@@ -83,13 +91,14 @@ function QuoteStatusPill({ status }: { status: string }) {
 }
 
 // ---- Tarjeta de prospecto ----
-function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onDeleteQuote }: {
+function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onDeleteQuote, onViewFile }: {
   prospect: Prospect;
   onEdit: () => void;
   onDelete: () => void;
   onAddQuote: () => void;
   onEditQuote: (q: Quote) => void;
   onDeleteQuote: (qid: string) => void;
+  onViewFile: (url: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const q = prospect.latestQuote;
@@ -155,6 +164,16 @@ function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onD
                   {q.quoteNumber ? `# ${q.quoteNumber}` : 'Cotización reciente'}
                 </span>
                 <QuoteStatusPill status={q.status} />
+                {(() => {
+                  const fu = getFileUrl((q as any).file_url || q.fileUrl);
+                  return fu ? (
+                    <button onClick={() => onViewFile(fu)} title="Ver archivo"
+                      className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded-lg transition-opacity hover:opacity-70"
+                      style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>
+                      <Eye size={10} />Ver
+                    </button>
+                  ) : null;
+                })()}
               </div>
               {prospect.quotesCount > 0 && (
                 <button onClick={() => setExpanded(!expanded)}
@@ -226,6 +245,15 @@ function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onD
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  {(aq.fileUrl || (aq as any).file_url) && (() => {
+                    const fu = getFileUrl((aq as any).file_url || aq.fileUrl);
+                    return fu ? (
+                      <button onClick={() => onViewFile(fu)} className="p-1 rounded hover:opacity-60"
+                        title="Ver archivo" style={{ color: '#8B5CF6' }}>
+                        {isPdf(fu) ? <FileText size={12} /> : <Image size={12} />}
+                      </button>
+                    ) : null;
+                  })()}
                   <button onClick={() => onEditQuote(aq)} className="p-1 rounded hover:opacity-60" style={{ color: 'var(--accent)' }}>
                     <Pencil size={12} />
                   </button>
@@ -313,6 +341,7 @@ export default function ProspectsPage() {
   const [editProspect, setEditProspect] = useState<Prospect | null>(null);
   const [quoteModal, setQuoteModal] = useState<{ prospectId: string; quote?: Quote } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'prospect' | 'quote'; id: string; prospectId?: string } | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['prospects', search, statusFilter],
@@ -400,6 +429,7 @@ export default function ProspectsPage() {
               onAddQuote={() => setQuoteModal({ prospectId: p.id })}
               onEditQuote={q => setQuoteModal({ prospectId: p.id, quote: q })}
               onDeleteQuote={qid => setConfirmDelete({ type: 'quote', id: qid, prospectId: p.id })}
+              onViewFile={url => setPreviewUrl(url)}
             />
           ))}
         </div>
@@ -431,6 +461,34 @@ export default function ProspectsPage() {
             }}
             onCancel={() => setQuoteModal(null)}
           />
+        </Modal>
+      )}
+
+      {/* Vista previa de archivo */}
+      {previewUrl && (
+        <Modal title="Vista previa — Cotización" onClose={() => setPreviewUrl(null)} size="lg">
+          <div className="rounded-xl overflow-hidden" style={{ background: '#111', minHeight: 300 }}>
+            {isPdf(previewUrl) ? (
+              <iframe
+                src={previewUrl}
+                title="Cotización"
+                className="w-full"
+                style={{ height: 560, border: 'none', display: 'block' }}
+              />
+            ) : (
+              <img
+                src={previewUrl}
+                alt="Cotización"
+                className="w-full object-contain"
+                style={{ maxHeight: 560, display: 'block' }}
+              />
+            )}
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button onClick={() => setPreviewUrl(null)} className="btn-ghost flex items-center gap-1.5">
+              <X size={14} />Cerrar
+            </button>
+          </div>
         </Modal>
       )}
 
