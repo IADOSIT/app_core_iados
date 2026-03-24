@@ -13,28 +13,28 @@ services:
       PORT: 4000
       NODE_ENV: production
       FRONTEND_URL: https://core.iados.online
-      
+
       # Database
-      DB_HOST: pg.bodegadigital.com.mx
+      DB_HOST: 74.208.149.7
       DB_PORT: 5432
       DB_NAME: core_iados
       DB_USER: administrador
-      DB_PASSWORD: YOUR_DB_PASSWORD_HERE
+      DB_PASSWORD: U191tl1ebFN2RJR0fld5QhC8U29AhdOQ
       DB_SSL: "true"
-      
+
       # JWT
       JWT_SECRET: CHANGE_THIS_TO_A_STRONG_RANDOM_SECRET
       JWT_REFRESH_SECRET: CHANGE_THIS_TO_ANOTHER_STRONG_SECRET
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
-      
+
       # Email (SMTP)
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587
       SMTP_USER: your_email@gmail.com
       SMTP_PASS: your_app_password
       EMAIL_FROM: Core iados <noreply@iados.mx>
-      
+
       # App
       APP_NAME: Core iados CRM
       ADMIN_EMAIL: admin@iados.mx
@@ -43,9 +43,9 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - internet_out    # bridge propio → NAT del host → fetch a internet funciona
+      - internet_out # bridge propio → NAT del host → fetch a internet funciona
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:4000/health"]
+      test: [ "CMD", "wget", "-qO-", "http://localhost:4000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -77,4 +77,4 @@ networks:
     name: core_iados_internal
   internet_out:
     name: core_iados_internet
-    driver: bridge   # el host hace masquerade → salida a internet para fetch()
+    driver: bridge # el host hace masquerade → salida a internet para fetch()
