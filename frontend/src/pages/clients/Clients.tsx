@@ -172,32 +172,34 @@ export default function ClientsPage() {
                       </div>
                     </td>
                     <td>
-                      {(client as any).activeProducts?.length ? (
-                        <div className="flex flex-wrap gap-1">
-                          {(client as any).activeProducts.map((ap: { productId: string; productName: string; systemUrl?: string; status: string }) => (
-                            <a
-                              key={ap.productId}
-                              href={ap.systemUrl || '#'}
-                              target={ap.systemUrl ? '_blank' : undefined}
-                              rel="noopener noreferrer"
-                              title={ap.systemUrl || ap.productName}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
-                              style={{
-                                background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
-                                color: 'var(--accent)',
-                                border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
-                                textDecoration: 'none',
-                              }}
-                            >
-                              <Package size={10} />
-                              {ap.productName}
-                              {ap.systemUrl && <ExternalLink size={9} />}
-                            </a>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin licencias activas</span>
-                      )}
+                      {(() => {
+                        const activeProds = (client as any).active_products || (client as any).activeProducts;
+                        if (!activeProds?.length) return <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin licencias activas</span>;
+                        return (
+                          <div className="flex flex-wrap gap-1">
+                            {activeProds.map((ap: { productId: string; productName: string; systemUrl?: string; status: string }) => (
+                              <a
+                                key={ap.productId}
+                                href={ap.systemUrl || '#'}
+                                target={ap.systemUrl ? '_blank' : undefined}
+                                rel="noopener noreferrer"
+                                title={ap.systemUrl || ap.productName}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                                style={{
+                                  background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+                                  color: 'var(--accent)',
+                                  border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                <Package size={10} />
+                                {ap.productName}
+                                {ap.systemUrl && <ExternalLink size={9} />}
+                              </a>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td><StatusBadge status={client.status} /></td>
                     <td>
@@ -223,13 +225,13 @@ export default function ClientsPage() {
                       </div>
                     </td>
                     <td>
-                      {(client.pendingPayments || 0) > 0 ? (
-                        <span className="badge badge-yellow">{client.pendingPayments}</span>
+                      {((client as any).pending_payments ?? client.pendingPayments ?? 0) > 0 ? (
+                        <span className="badge badge-yellow">{(client as any).pending_payments ?? client.pendingPayments}</span>
                       ) : (
                         <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
                       )}
                     </td>
-                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(client.createdAt)}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate((client as any).created_at || client.createdAt)}</td>
                     <td>
                       <div className="flex items-center gap-1">
                         <button
