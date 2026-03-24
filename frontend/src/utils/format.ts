@@ -27,10 +27,9 @@ export const formatDateTime = (date: string | Date | null | undefined): string =
   }).format(new Date(date));
 };
 
-export const clientDisplayName = (client: {
-  companyName?: string;
-  firstName?: string;
-  lastName?: string;
-}): string => {
-  return client.companyName || `${client.firstName || ''} ${client.lastName || ''}`.trim() || '—';
+export const clientDisplayName = (client: Record<string, any>): string => {
+  const company = client.companyName || client.company_name;
+  const first = client.firstName || client.first_name || '';
+  const last = client.lastName || client.last_name || '';
+  return company || `${first} ${last}`.trim() || '—';
 };

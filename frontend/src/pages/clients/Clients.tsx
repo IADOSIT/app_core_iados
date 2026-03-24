@@ -61,7 +61,7 @@ export default function ClientsPage() {
   });
 
   const handleDelete = (client: Client) => {
-    const name = (client as any).companyName || `${client.firstName || ''} ${client.lastName || ''}`.trim() || client.email;
+    const name = clientDisplayName(client as any);
     if (!window.confirm(`¿Eliminar permanentemente a "${name}"?\n\nSe eliminarán también sus licencias, pagos y facturas. Esta acción NO se puede deshacer.`)) return;
     deleteMutation.mutate(client.id);
   };

@@ -12,7 +12,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: 'dark',
+      theme: 'light',
       toggle: () =>
         set((s) => {
           const next = s.theme === 'dark' ? 'light' : 'dark';
@@ -31,9 +31,9 @@ export const useThemeStore = create<ThemeState>()(
 // Aplicar tema al cargar la página
 export const initTheme = () => {
   const stored = localStorage.getItem('iados-theme');
-  let theme = 'dark';
+  let theme = 'light';
   try {
-    theme = JSON.parse(stored || '{}').state?.theme || 'dark';
+    theme = JSON.parse(stored || '{}').state?.theme || 'light';
   } catch {}
   document.documentElement.setAttribute('data-theme', theme);
 };

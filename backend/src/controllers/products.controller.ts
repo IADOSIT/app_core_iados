@@ -3,17 +3,27 @@ import { query } from '../config/database';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { encrypt, decrypt } from '../utils/vault';
 
-const productSelect = `
-  SELECT p.id, p.name, p.description, p.base_price_mxn, p.base_price_usd,
-         p.is_active, p.api_slug, p.system_url, p.api_secret,
-         p.admin_user, p.admin_password_enc, p.access_url,
-         p.created_at, p.updated_at,
-         COALESCE(json_agg(pp ORDER BY pp.created_at) FILTER (WHERE pp.id IS NOT NULL), '[]') as plans
-  FROM products p
-  LEFT JOIN product_plans pp ON pp.product_id = p.id AND pp.is_active = true
-  WHERE p.is_active = true
-  GROUP BY p.id ORDER BY p.name
-`;
+function buildProductSelect(sort = 'created_at', dir = 'asc') {
+  const allowed: Record<string, string> = {
+    created_at: 'p.created_at',
+    name: 'p.name',
+    base_price_mxn: 'p.base_price_mxn',
+    base_price_usd: 'p.base_price_usd',
+  };
+  const orderCol = allowed[sort] || 'p.created_at';
+  const orderDir = dir === 'desc' ? 'DESC' : 'ASC';
+  return `
+    SELECT p.id, p.name, p.description, p.base_price_mxn, p.base_price_usd,
+           p.is_active, p.api_slug, p.system_url, p.api_secret,
+           p.admin_user, p.admin_password_enc, p.access_url,
+           p.created_at, p.updated_at,
+           COALESCE(json_agg(pp ORDER BY pp.created_at) FILTER (WHERE pp.id IS NOT NULL), '[]') as plans
+    FROM products p
+    LEFT JOIN product_plans pp ON pp.product_id = p.id AND pp.is_active = true
+    WHERE p.is_active = true
+    GROUP BY p.id ORDER BY ${orderCol} ${orderDir}
+  `;
+}
 
 function mapProduct(row: any) {
   return {
@@ -26,9 +36,10 @@ function mapProduct(row: any) {
   };
 }
 
-export const getProducts = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const result = await query(productSelect);
+    const { sort, dir } = req.query as { sort?: string; dir?: string };
+    const result = await query(buildProductSelect(sort, dir));
     res.json({ success: true, data: result.rows.map(mapProduct) });
   } catch {
     res.status(500).json({ success: false, message: 'Error al obtener productos' });

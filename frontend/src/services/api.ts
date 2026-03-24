@@ -117,7 +117,7 @@ export const invoicesApi = {
 // PRODUCTS
 // ========================
 export const productsApi = {
-  getAll: () => api.get('/products'),
+  getAll: (params?: { sort?: string; dir?: string }) => api.get('/products', { params }),
   create: (data: Record<string, unknown>) => api.post('/products', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/products/${id}`, data),
   delete: (id: string) => api.delete(`/products/${id}`),

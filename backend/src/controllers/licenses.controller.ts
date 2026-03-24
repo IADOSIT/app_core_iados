@@ -80,20 +80,22 @@ export const createLicense = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { clientId, productId, planId, versionId, maxUsers, startDate, endDate, autoRenew, notes } = req.body;
     const licenseKey = generateLicenseKey();
+    const planIdVal = planId && planId !== '' ? planId : null;
+    const versionIdVal = versionId && versionId !== '' ? versionId : null;
 
     const result = await query(
       `INSERT INTO licenses (license_key, client_id, product_id, plan_id, version_id,
         max_users, start_date, end_date, auto_renew, notes, created_by, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'pendiente') RETURNING *`,
-      [licenseKey, clientId, productId, planId, versionId, maxUsers || 1, startDate, endDate, autoRenew || false, notes, req.user?.userId]
+      [licenseKey, clientId, productId, planIdVal, versionIdVal, maxUsers || 1, startDate || null, endDate || null, autoRenew || false, notes, req.user?.userId]
     );
 
     // Registrar historial de versión si aplica
-    if (versionId) {
+    if (versionIdVal) {
       await query(
         `INSERT INTO client_version_history (client_id, version_id, product_id, assigned_by)
          VALUES ($1,$2,$3,$4)`,
-        [clientId, versionId, productId, req.user?.userId]
+        [clientId, versionIdVal, productId, req.user?.userId]
       );
     }
 

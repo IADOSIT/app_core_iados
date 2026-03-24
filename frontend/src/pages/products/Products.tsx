@@ -251,18 +251,25 @@ export default function ProductsPage() {
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [expandedIntegration, setExpandedIntegration] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [sort, setSort] = useState('created_at');
+  const [dir, setDir] = useState('asc');
 
-  const { data, isLoading } = useQuery({ queryKey: ['products'], queryFn: () => productsApi.getAll() });
+  const { data, isLoading } = useQuery({
+    queryKey: ['products', sort, dir],
+    queryFn: () => productsApi.getAll({ sort, dir }),
+  });
+
+  const invalidateProducts = () => qc.invalidateQueries({ queryKey: ['products'] });
 
   const regenerate = useMutation({
     mutationFn: (id: string) => productsApi.regenerateSecret(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); toast.success('API Secret regenerado'); },
+    onSuccess: () => { invalidateProducts(); toast.success('API Secret regenerado'); },
     onError: () => toast.error('Error al regenerar secret'),
   });
 
   const deleteProduct = useMutation({
     mutationFn: (id: string) => productsApi.delete(id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['products'] }); toast.success('Producto desactivado'); },
+    onSuccess: () => { invalidateProducts(); toast.success('Producto desactivado'); },
     onError: () => toast.error('Error al desactivar producto'),
   });
 
@@ -283,6 +290,34 @@ export default function ProductsPage() {
         <button onClick={() => setShowForm(true)} className="btn-primary">
           <Plus size={16} /> Nuevo Sistema
         </button>
+      </div>
+
+      {/* Sort controls */}
+      <div className="card p-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Ordenar por:</span>
+        {[
+          { value: 'created_at', label: 'Fecha de registro' },
+          { value: 'name', label: 'Nombre A-Z' },
+          { value: 'base_price_mxn', label: 'Precio MXN' },
+          { value: 'base_price_usd', label: 'Precio USD' },
+        ].map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => {
+              if (sort === opt.value) setDir(d => d === 'asc' ? 'desc' : 'asc');
+              else { setSort(opt.value); setDir('asc'); }
+            }}
+            className="text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+            style={{
+              background: sort === opt.value ? 'color-mix(in srgb, var(--accent) 15%, transparent)' : 'var(--bg-hover)',
+              color: sort === opt.value ? 'var(--accent)' : 'var(--text-muted)',
+              border: `1px solid ${sort === opt.value ? 'color-mix(in srgb, var(--accent) 30%, transparent)' : 'var(--border)'}`,
+            }}
+          >
+            {opt.label}
+            {sort === opt.value && <span>{dir === 'asc' ? ' ↑' : ' ↓'}</span>}
+          </button>
+        ))}
       </div>
 
       {isLoading ? <LoadingSpinner /> : products.length === 0 ? (
@@ -411,7 +446,7 @@ export default function ProductsPage() {
         <Modal title={editProduct ? 'Editar Sistema' : 'Nuevo Sistema'} onClose={() => { setShowForm(false); setEditProduct(null); }} size="lg">
           <ProductForm
             product={editProduct || undefined}
-            onSuccess={() => { setShowForm(false); setEditProduct(null); qc.invalidateQueries({ queryKey: ['products'] }); }}
+            onSuccess={() => { setShowForm(false); setEditProduct(null); invalidateProducts(); }}
             onCancel={() => { setShowForm(false); setEditProduct(null); }}
           />
         </Modal>
