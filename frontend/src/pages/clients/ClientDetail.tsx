@@ -30,11 +30,12 @@ export default function ClientDetailPage() {
   const client: Client = data?.data?.data;
   if (!client) return null;
 
+  const c = client as any;
   const tabs = [
     { key: 'overview', label: 'Información', icon: Building2 },
-    { key: 'licenses', label: `Licencias (${client.licenses?.length || 0})`, icon: Key },
-    { key: 'payments', label: `Pagos (${client.payments?.length || 0})`, icon: CreditCard },
-    { key: 'versions', label: `Versiones (${client.versionHistory?.length || 0})`, icon: GitBranch },
+    { key: 'licenses', label: `Licencias (${c.licenses?.length || 0})`, icon: Key },
+    { key: 'payments', label: `Pagos (${c.payments?.length || 0})`, icon: CreditCard },
+    { key: 'versions', label: `Versiones (${c.versionHistory?.length || 0})`, icon: GitBranch },
   ];
 
   return (
@@ -69,15 +70,15 @@ export default function ClientDetailPage() {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-primary-300">{client.activeLicenses || 0}</p>
+          <p className="text-2xl font-bold text-primary-300">{c.activeLicenses ?? c.active_licenses ?? 0}</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Licencias Activas</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-yellow-400">{client.pendingPayments || 0}</p>
+          <p className="text-2xl font-bold text-yellow-400">{c.pendingPayments ?? c.pending_payments ?? 0}</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Pagos Pendientes</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{client.contacts?.length || 0}</p>
+          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{c.contacts?.length || 0}</p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Contactos</p>
         </div>
       </div>
@@ -146,29 +147,30 @@ export default function ClientDetailPage() {
 
           <div className="card p-5 space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Contactos Adicionales</h3>
-            {client.contacts && client.contacts.length > 0 ? (
+            {c.contacts && c.contacts.length > 0 ? (
               <div className="space-y-2">
-                {client.contacts.map((contact) => (
+                {c.contacts.map((contact: any) => (
                   <div key={contact.id} className="flex items-start justify-between py-2 last:border-0" style={{ borderBottom: '1px solid var(--border-divider)' }}>
                     <div>
-                      <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{contact.firstName} {contact.lastName}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{contact.firstName || contact.first_name} {contact.lastName || contact.last_name}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{contact.position}</p>
                       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{contact.email}</p>
                     </div>
-                    {contact.isPrimary && <span className="badge badge-green text-xs">Principal</span>}
+                    {(contact.isPrimary || contact.is_primary) && <span className="badge badge-green text-xs">Principal</span>}
                   </div>
                 ))}
               </div>
             ) : (
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin contactos adicionales</p>
             )}
+
           </div>
         </div>
       )}
 
       {tab === 'licenses' && (
         <div className="card">
-          {(client.licenses?.length || 0) === 0 ? (
+          {(c.licenses?.length || 0) === 0 ? (
             <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin licencias asignadas</div>
           ) : (
             <div className="table-wrapper">
@@ -178,20 +180,40 @@ export default function ClientDetailPage() {
                     <th>Clave</th>
                     <th>Producto</th>
                     <th>Plan</th>
+                    <th>Versión</th>
                     <th>Estado</th>
                     <th>Usuarios</th>
                     <th>Vencimiento</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {client.licenses?.map((lic) => (
+                  {c.licenses?.map((lic: any) => (
                     <tr key={lic.id}>
-                      <td className="font-mono text-xs text-primary-300">{lic.licenseKey}</td>
-                      <td className="text-sm">{lic.productName}</td>
-                      <td><StatusBadge status={lic.planType || ''} /></td>
+                      <td className="font-mono text-xs text-primary-300">{lic.licenseKey || lic.license_key}</td>
+                      <td className="text-sm">{lic.productName || lic.product_name || '—'}</td>
+                      <td>
+                        {(lic.planType || lic.plan_type) ? (
+                          <div>
+                            <StatusBadge status={lic.planType || lic.plan_type} />
+                            {(lic.planName || lic.plan_name) && (
+                              <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{lic.planName || lic.plan_name}</div>
+                            )}
+                          </div>
+                        ) : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
+                      </td>
+                      <td>
+                        {lic.version ? (
+                          <div>
+                            <span className="font-mono text-xs" style={{ color: 'var(--accent)' }}>v{lic.version}</span>
+                            {(lic.versionName || lic.version_name) && (
+                              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{lic.versionName || lic.version_name}</div>
+                            )}
+                          </div>
+                        ) : <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>}
+                      </td>
                       <td><StatusBadge status={lic.status} /></td>
-                      <td className="text-xs">{lic.currentUsers}/{lic.maxUsers}</td>
-                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{lic.endDate ? formatDate(lic.endDate) : 'Permanente'}</td>
+                      <td className="text-xs">{lic.currentUsers ?? lic.current_users ?? 0}/{lic.maxUsers ?? lic.max_users}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{(lic.endDate || lic.end_date) ? formatDate(lic.endDate || lic.end_date) : 'Permanente'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -203,7 +225,7 @@ export default function ClientDetailPage() {
 
       {tab === 'payments' && (
         <div className="card">
-          {(client.payments?.length || 0) === 0 ? (
+          {(c.payments?.length || 0) === 0 ? (
             <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin pagos registrados</div>
           ) : (
             <div className="table-wrapper">
@@ -219,13 +241,15 @@ export default function ClientDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {client.payments?.map((pay) => (
+                  {c.payments?.map((pay: any) => (
                     <tr key={pay.id}>
                       <td className="font-semibold text-primary-300">{formatCurrency(pay.amount, pay.currency)}</td>
                       <td className="text-xs">{pay.currency}</td>
                       <td className="text-xs capitalize">{pay.method || '—'}</td>
                       <td><StatusBadge status={pay.status} /></td>
-                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.paidAt ? formatDate(pay.paidAt) : formatDate(pay.createdAt)}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {(pay.paidAt || pay.paid_at) ? formatDate(pay.paidAt || pay.paid_at) : formatDate(pay.createdAt || pay.created_at)}
+                      </td>
                       <td className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{pay.reference || '—'}</td>
                     </tr>
                   ))}
@@ -238,7 +262,7 @@ export default function ClientDetailPage() {
 
       {tab === 'versions' && (
         <div className="card">
-          {(client.versionHistory?.length || 0) === 0 ? (
+          {(c.versionHistory?.length || 0) === 0 ? (
             <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin historial de versiones</div>
           ) : (
             <div className="table-wrapper">
@@ -246,6 +270,7 @@ export default function ClientDetailPage() {
                 <thead>
                   <tr>
                     <th>Versión</th>
+                    <th>Mejora</th>
                     <th>Producto</th>
                     <th>Asignado por</th>
                     <th>Fecha</th>
@@ -253,12 +278,13 @@ export default function ClientDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {client.versionHistory?.map((vh) => (
+                  {c.versionHistory?.map((vh: any) => (
                     <tr key={vh.id}>
-                      <td className="font-mono text-xs text-primary-300">{vh.version}</td>
-                      <td className="text-sm">{vh.productName}</td>
-                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.assignedByFirst || '—'}</td>
-                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(vh.assignedAt)}</td>
+                      <td className="font-mono text-xs text-primary-300">v{vh.version}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.versionName || vh.version_name || '—'}</td>
+                      <td className="text-sm">{vh.productName || vh.product_name || '—'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.assignedByFirst || vh.assigned_by_first || '—'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(vh.assignedAt || vh.assigned_at)}</td>
                       <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.notes || '—'}</td>
                     </tr>
                   ))}

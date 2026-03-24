@@ -58,7 +58,9 @@ export const getClient = async (req: AuthRequest, res: Response): Promise<void> 
   try {
     const { id } = req.params;
     const result = await query(
-      `SELECT c.*, u.first_name as assigned_first, u.last_name as assigned_last
+      `SELECT c.*, u.first_name as assigned_first, u.last_name as assigned_last,
+              (SELECT COUNT(*) FROM licenses l WHERE l.client_id = c.id AND l.status = 'activa') as active_licenses,
+              (SELECT COUNT(*) FROM payments p WHERE p.client_id = c.id AND p.status = 'pendiente') as pending_payments
        FROM clients c LEFT JOIN users u ON c.assigned_to = u.id WHERE c.id = $1`,
       [id]
     );
@@ -70,16 +72,25 @@ export const getClient = async (req: AuthRequest, res: Response): Promise<void> 
 
     // Obtener contactos, licencias, pagos, historial versiones
     const [contacts, licenses, payments, versions] = await Promise.all([
-      query('SELECT * FROM client_contacts WHERE client_id = $1 ORDER BY is_primary DESC', [id]),
-      query(`SELECT l.*, p.name as product_name, pp.name as plan_name, pp.type as plan_type
+      query(`SELECT id, client_id, first_name, last_name, email, phone, position, is_primary, created_at
+             FROM client_contacts WHERE client_id = $1 ORDER BY is_primary DESC`, [id]),
+      query(`SELECT l.id, l.license_key, l.status, l.max_users, l.current_users,
+                    l.start_date, l.end_date, l.auto_renew, l.notes, l.created_at,
+                    p.name as product_name, pp.name as plan_name, pp.type as plan_type,
+                    sv.version, sv.version_name
              FROM licenses l
              LEFT JOIN products p ON l.product_id = p.id
              LEFT JOIN product_plans pp ON l.plan_id = pp.id
+             LEFT JOIN software_versions sv ON l.version_id = sv.id
              WHERE l.client_id = $1 ORDER BY l.created_at DESC`, [id]),
-      query(`SELECT pay.*, inv.invoice_number FROM payments pay
+      query(`SELECT pay.id, pay.amount, pay.currency, pay.exchange_rate, pay.amount_mxn,
+                    pay.status, pay.method, pay.reference, pay.notes, pay.paid_at,
+                    pay.due_date, pay.created_at, inv.invoice_number
+             FROM payments pay
              LEFT JOIN invoices inv ON pay.invoice_id = inv.id
-             WHERE pay.client_id = $1 ORDER BY pay.created_at DESC LIMIT 10`, [id]),
-      query(`SELECT cvh.*, sv.version, sv.version_name, p.name as product_name,
+             WHERE pay.client_id = $1 ORDER BY pay.created_at DESC LIMIT 20`, [id]),
+      query(`SELECT cvh.id, cvh.assigned_at, cvh.notes,
+                    sv.version, sv.version_name, p.name as product_name,
                     u.first_name as assigned_by_first
              FROM client_version_history cvh
              LEFT JOIN software_versions sv ON cvh.version_id = sv.id
@@ -90,7 +101,48 @@ export const getClient = async (req: AuthRequest, res: Response): Promise<void> 
 
     res.json({
       success: true,
-      data: { ...client, contacts: contacts.rows, licenses: licenses.rows, payments: payments.rows, versionHistory: versions.rows },
+      data: {
+        ...client,
+        activeLicenses: Number(client.active_licenses) || 0,
+        pendingPayments: Number(client.pending_payments) || 0,
+        contacts: contacts.rows.map((c: any) => ({
+          ...c,
+          firstName: c.first_name,
+          lastName: c.last_name,
+          isPrimary: c.is_primary,
+          createdAt: c.created_at,
+        })),
+        licenses: licenses.rows.map((l: any) => ({
+          ...l,
+          licenseKey: l.license_key,
+          productName: l.product_name,
+          planName: l.plan_name,
+          planType: l.plan_type,
+          maxUsers: l.max_users,
+          currentUsers: l.current_users ?? 0,
+          startDate: l.start_date,
+          endDate: l.end_date,
+          autoRenew: l.auto_renew,
+          versionName: l.version_name,
+          createdAt: l.created_at,
+        })),
+        payments: payments.rows.map((p: any) => ({
+          ...p,
+          exchangeRate: p.exchange_rate,
+          amountMxn: p.amount_mxn,
+          paidAt: p.paid_at,
+          dueDate: p.due_date,
+          invoiceNumber: p.invoice_number,
+          createdAt: p.created_at,
+        })),
+        versionHistory: versions.rows.map((v: any) => ({
+          ...v,
+          productName: v.product_name,
+          versionName: v.version_name,
+          assignedByFirst: v.assigned_by_first,
+          assignedAt: v.assigned_at,
+        })),
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error al obtener cliente' });

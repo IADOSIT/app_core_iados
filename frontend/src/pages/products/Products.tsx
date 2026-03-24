@@ -368,9 +368,9 @@ export default function ProductsPage() {
               </div>
 
               {/* Botón Acceder */}
-              {((product as any).access_url || product.accessUrl || (product as any).system_url || product.systemUrl) && (
+              {((product as any).access_url || (product as any).accessUrl || (product as any).system_url || product.systemUrl) && (
                 <a
-                  href={(product as any).access_url || product.accessUrl || (product as any).system_url || product.systemUrl!}
+                  href={(product as any).access_url || (product as any).accessUrl || (product as any).system_url || product.systemUrl!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary w-full justify-center no-underline"
