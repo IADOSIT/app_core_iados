@@ -15,14 +15,14 @@ export default function PaymentForm({ payment, onSuccess, onCancel }: PaymentFor
 
   const { register, handleSubmit, watch } = useForm({
     defaultValues: {
-      clientId: payment?.clientId || '',
+      clientId: (payment as any)?.client_id || payment?.clientId || '',
       amount: payment?.amount ? String(payment.amount) : '',
       currency: payment?.currency || 'MXN',
-      exchangeRate: payment?.exchangeRate || 1,
+      exchangeRate: (payment as any)?.exchange_rate ?? payment?.exchangeRate ?? 1,
       status: payment?.status || 'pendiente',
       method: payment?.method || '',
       reference: payment?.reference || '',
-      dueDate: payment?.dueDate ? payment.dueDate.slice(0, 10) : '',
+      dueDate: ((payment as any)?.due_date || payment?.dueDate || '').slice(0, 10),
       notes: payment?.notes || '',
     },
   });
@@ -45,7 +45,7 @@ export default function PaymentForm({ payment, onSuccess, onCancel }: PaymentFor
   });
 
   const onSubmit = (data: Record<string, unknown>) => {
-    if (isEdit) data.clientId = payment!.clientId;
+    if (isEdit) data.clientId = (payment as any)?.client_id || payment!.clientId;
     mutation.mutate(data);
   };
 

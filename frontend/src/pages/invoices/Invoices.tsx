@@ -88,17 +88,17 @@ export default function InvoicesPage() {
               <tbody>
                 {invoices.map((inv) => (
                   <tr key={inv.id}>
-                    <td className="font-mono text-xs text-primary-300">{inv.invoiceNumber}</td>
+                    <td className="font-mono text-xs text-primary-300">{(inv as any).invoice_number || inv.invoiceNumber}</td>
                     <td>
-                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{inv.companyName || `${inv.clientFirst || ''} ${inv.clientLast || ''}`}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{inv.clientRfc}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{(inv as any).company_name || inv.companyName || `${(inv as any).client_first || ''} ${(inv as any).client_last || ''}`.trim() || '—'}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{(inv as any).client_rfc || inv.clientRfc}</div>
                     </td>
                     <td><StatusBadge status={inv.status} /></td>
                     <td className="text-sm">{formatCurrency(inv.subtotal, inv.currency)}</td>
                     <td className="text-sm" style={{ color: 'var(--text-muted)' }}>{formatCurrency(inv.tax, inv.currency)}</td>
                     <td className="font-semibold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(inv.total, inv.currency)}</td>
                     <td className="text-xs">{inv.currency}</td>
-                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{inv.dueDate ? formatDate(inv.dueDate) : '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{((inv as any).due_date || inv.dueDate) ? formatDate((inv as any).due_date || inv.dueDate) : '—'}</td>
                     <td>
                       <div className="flex items-center gap-1">
                         {inv.status === 'emitida' && (

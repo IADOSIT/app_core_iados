@@ -17,13 +17,11 @@ export default function VersionForm({ version, onSuccess, onCancel }: VersionFor
     defaultValues: {
       productId: (version as any)?.product_id || version?.productId || '',
       version: version?.version || '',
-      versionName: version?.versionName || '',
-      releaseNotes: version?.releaseNotes || '',
-      isStable: version?.isStable ?? true,
-      isLatest: version?.isLatest ?? false,
-      releasedAt: version?.releasedAt
-        ? version.releasedAt.split('T')[0]
-        : new Date().toISOString().split('T')[0],
+      versionName: (version as any)?.version_name || version?.versionName || '',
+      releaseNotes: (version as any)?.release_notes || version?.releaseNotes || '',
+      isStable: (version as any)?.is_stable ?? version?.isStable ?? true,
+      isLatest: (version as any)?.is_latest ?? version?.isLatest ?? false,
+      releasedAt: ((version as any)?.released_at || version?.releasedAt || new Date().toISOString()).split('T')[0],
     },
   });
 

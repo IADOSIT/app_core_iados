@@ -3,30 +3,35 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { productsApi } from '../../services/api';
-import { Plus, Trash2, Lock } from 'lucide-react';
+import { Plus, Trash2, Lock, Pencil, Check, X } from 'lucide-react';
 import type { Product } from '../../types';
 
 interface ProductFormProps { product?: Product; onSuccess: () => void; onCancel: () => void; }
 
 interface PlanDraft { name: string; type: string; priceMxn: number; priceUsd: number; maxUsers: number | ''; durationDays: number | ''; }
 
+const emptyPlan: PlanDraft = { name: '', type: 'mensual', priceMxn: 0, priceUsd: 0, maxUsers: '', durationDays: '' };
+
 export default function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
   const isEdit = !!product;
   const [plans, setPlans] = useState<PlanDraft[]>([]);
   const [showAddPlan, setShowAddPlan] = useState(false);
-  const [newPlan, setNewPlan] = useState<PlanDraft>({ name: '', type: 'mensual', priceMxn: 0, priceUsd: 0, maxUsers: '', durationDays: '' });
+  const [newPlan, setNewPlan] = useState<PlanDraft>(emptyPlan);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [editingPlanData, setEditingPlanData] = useState<PlanDraft>(emptyPlan);
 
+  const p = product as any;
   const { register, handleSubmit } = useForm({
     defaultValues: {
       name: product?.name || '',
       description: product?.description || '',
-      basePriceMxn: product?.basePriceMxn || 0,
-      basePriceUsd: product?.basePriceUsd || 0,
-      apiSlug: product?.apiSlug || '',
-      systemUrl: product?.systemUrl || '',
-      accessUrl: (product as any)?.accessUrl || '',
-      adminUser: (product as any)?.adminUser || '',
+      basePriceMxn: p?.base_price_mxn ?? product?.basePriceMxn ?? 0,
+      basePriceUsd: p?.base_price_usd ?? product?.basePriceUsd ?? 0,
+      apiSlug: p?.api_slug || product?.apiSlug || '',
+      systemUrl: p?.system_url || product?.systemUrl || '',
+      accessUrl: p?.access_url || p?.accessUrl || '',
+      adminUser: p?.admin_user || p?.adminUser || '',
       adminPassword: '',
     },
   });
@@ -47,9 +52,9 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
       try {
         await productsApi.addPlan(product!.id, newPlan as unknown as Record<string, unknown>);
         toast.success('Plan agregado');
-        setNewPlan({ name: '', type: 'mensual', priceMxn: 0, priceUsd: 0, maxUsers: '', durationDays: '' });
+        setNewPlan(emptyPlan);
         setShowAddPlan(false);
-        onSuccess(); // refresh product list
+        onSuccess();
       } catch {
         toast.error('Error al agregar plan');
       } finally {
@@ -57,8 +62,46 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
       }
     } else {
       setPlans([...plans, { ...newPlan }]);
-      setNewPlan({ name: '', type: 'mensual', priceMxn: 0, priceUsd: 0, maxUsers: '', durationDays: '' });
+      setNewPlan(emptyPlan);
       setShowAddPlan(false);
+    }
+  };
+
+  const startEditPlan = (plan: any) => {
+    setEditingPlanId(plan.id);
+    setEditingPlanData({
+      name: plan.name || '',
+      type: plan.type || 'mensual',
+      priceMxn: plan.price_mxn ?? plan.priceMxn ?? 0,
+      priceUsd: plan.price_usd ?? plan.priceUsd ?? 0,
+      maxUsers: plan.max_users ?? plan.maxUsers ?? '',
+      durationDays: plan.duration_days ?? plan.durationDays ?? '',
+    });
+  };
+
+  const savePlanEdit = async () => {
+    if (!editingPlanId) return;
+    setSavingPlan(true);
+    try {
+      await productsApi.updatePlan(product!.id, editingPlanId, editingPlanData as unknown as Record<string, unknown>);
+      toast.success('Plan actualizado');
+      setEditingPlanId(null);
+      onSuccess();
+    } catch {
+      toast.error('Error al actualizar plan');
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
+  const deletePlan = async (planId: string) => {
+    if (!window.confirm('¿Eliminar este plan?')) return;
+    try {
+      await productsApi.deletePlan(product!.id, planId);
+      toast.success('Plan eliminado');
+      onSuccess();
+    } catch {
+      toast.error('Error al eliminar plan');
     }
   };
 
@@ -130,32 +173,63 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
           </button>
         </div>
 
-        {/* Show existing plans in edit mode */}
+        {/* Existing plans in edit mode */}
         {isEdit && product?.plans && product.plans.length > 0 && (
           <div className="space-y-1.5 mb-3">
-            {product.plans.map((p: { id: string; name: string; type: string; priceMxn: number; maxUsers?: number }) => (
-              <div key={p.id} className="flex items-center justify-between p-2 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
-                <div>
-                  <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name}</span>
-                  <span className="text-xs ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>{p.type}</span>
-                </div>
-                <span className="text-xs" style={{ color: 'var(--accent)' }}>${p.priceMxn} MXN{p.maxUsers ? ` · ${p.maxUsers} usr` : ''}</span>
+            {product.plans.map((pl: any) => (
+              <div key={pl.id}>
+                {editingPlanId === pl.id ? (
+                  <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(0,230,118,0.04)', border: '1px solid rgba(0,230,118,0.15)' }}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input className="input text-sm" placeholder="Nombre" value={editingPlanData.name} onChange={(e) => setEditingPlanData({ ...editingPlanData, name: e.target.value })} />
+                      <select className="select text-sm" value={editingPlanData.type} onChange={(e) => setEditingPlanData({ ...editingPlanData, type: e.target.value })}>
+                        <option value="mensual">Mensual</option>
+                        <option value="permanente">Permanente</option>
+                        <option value="por_implementacion">Implementación</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="number" className="input text-sm" placeholder="Precio MXN" value={editingPlanData.priceMxn} onChange={(e) => setEditingPlanData({ ...editingPlanData, priceMxn: Number(e.target.value) })} />
+                      <input type="number" className="input text-sm" placeholder="Precio USD" value={editingPlanData.priceUsd} onChange={(e) => setEditingPlanData({ ...editingPlanData, priceUsd: Number(e.target.value) })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="number" className="input text-sm" placeholder="Máx. usuarios" value={editingPlanData.maxUsers} onChange={(e) => setEditingPlanData({ ...editingPlanData, maxUsers: e.target.value ? Number(e.target.value) : '' })} />
+                      <input type="number" className="input text-sm" placeholder="Días vigencia" value={editingPlanData.durationDays} onChange={(e) => setEditingPlanData({ ...editingPlanData, durationDays: e.target.value ? Number(e.target.value) : '' })} />
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <button type="button" onClick={() => setEditingPlanId(null)} className="btn-ghost py-1 px-3 text-xs"><X size={12} /> Cancelar</button>
+                      <button type="button" onClick={savePlanEdit} disabled={savingPlan} className="btn-secondary py-1 px-3 text-xs"><Check size={12} /> {savingPlan ? 'Guardando...' : 'Guardar'}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between p-2 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
+                    <div>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{pl.name}</span>
+                      <span className="text-xs ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>{pl.type}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: 'var(--accent)' }}>${pl.price_mxn ?? pl.priceMxn} MXN{(pl.max_users ?? pl.maxUsers) ? ` · ${pl.max_users ?? pl.maxUsers} usr` : ''}</span>
+                      <button type="button" onClick={() => startEditPlan(pl)} className="p-1 hover:text-blue-400" style={{ color: 'var(--text-muted)' }}><Pencil size={12} /></button>
+                      <button type="button" onClick={() => deletePlan(pl.id)} className="p-1 hover:text-red-400" style={{ color: 'var(--text-muted)' }}><Trash2 size={12} /></button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
 
-        {/* New plans being added (only in create mode) */}
+        {/* New plans (create mode) */}
         {!isEdit && plans.length > 0 && (
           <div className="space-y-1.5 mb-3">
-            {plans.map((p, i) => (
+            {plans.map((pl, i) => (
               <div key={i} className="flex items-center justify-between p-2 rounded-xl" style={{ background: 'var(--bg-hover)' }}>
                 <div>
-                  <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{p.name}</span>
-                  <span className="text-xs ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>{p.type}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{pl.name}</span>
+                  <span className="text-xs ml-2 capitalize" style={{ color: 'var(--text-muted)' }}>{pl.type}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs" style={{ color: 'var(--accent)' }}>${p.priceMxn} MXN</span>
+                  <span className="text-xs" style={{ color: 'var(--accent)' }}>${pl.priceMxn} MXN</span>
                   <button type="button" onClick={() => setPlans(plans.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-300">
                     <Trash2 size={13} />
                   </button>

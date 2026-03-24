@@ -18,12 +18,12 @@ export default function InvoiceForm({ invoice, onSuccess, onCancel }: InvoiceFor
 
   const { register, handleSubmit, watch, control } = useForm({
     defaultValues: {
-      clientId: invoice?.clientId || '',
-      taxRate: invoice?.taxRate ?? 16,
+      clientId: (invoice as any)?.client_id || invoice?.clientId || '',
+      taxRate: (invoice as any)?.tax_rate ?? invoice?.taxRate ?? 16,
       discount: invoice?.discount ?? 0,
       currency: invoice?.currency || 'MXN',
-      exchangeRate: invoice?.exchangeRate || 1,
-      dueDate: invoice?.dueDate ? invoice.dueDate.slice(0, 10) : '',
+      exchangeRate: (invoice as any)?.exchange_rate ?? invoice?.exchangeRate ?? 1,
+      dueDate: ((invoice as any)?.due_date || invoice?.dueDate || '').slice(0, 10),
       notes: invoice?.notes || '',
       items: invoice?.items?.length
         ? invoice.items.map((i) => ({

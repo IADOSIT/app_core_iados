@@ -45,7 +45,8 @@ export default function LicensesPage() {
   });
 
   const handleDelete = (lic: License) => {
-    if (!window.confirm(`¿Eliminar permanentemente la licencia ${lic.licenseKey}?\nEsta acción no se puede deshacer.`)) return;
+    const key = (lic as any).license_key || lic.licenseKey;
+    if (!window.confirm(`¿Eliminar permanentemente la licencia ${key}?\nEsta acción no se puede deshacer.`)) return;
     deleteMutation.mutate(lic.id);
   };
 
@@ -107,30 +108,45 @@ export default function LicensesPage() {
                   <tr key={lic.id}>
                     <td>
                       <span className="font-mono text-xs text-primary-300 bg-primary-300/10 px-2 py-0.5 rounded-lg">
-                        {lic.licenseKey}
+                        {(lic as any).license_key || lic.licenseKey}
                       </span>
                     </td>
                     <td>
-                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{lic.companyName || `${lic.clientFirst || ''} ${lic.clientLast || ''}`}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{lic.clientEmail}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                        {(lic as any).company_name || `${(lic as any).client_first || ''} ${(lic as any).client_last || ''}`.trim() || '—'}
+                      </div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{(lic as any).client_email}</div>
                     </td>
-                    <td className="text-sm">{lic.productName}</td>
-                    <td>{lic.planType && <StatusBadge status={lic.planType} />}</td>
+                    <td className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      {(lic as any).product_name || lic.productName || '—'}
+                    </td>
+                    <td>
+                      {((lic as any).plan_type || lic.planType) && (
+                        <div>
+                          <StatusBadge status={(lic as any).plan_type || lic.planType} />
+                          {((lic as any).plan_name || lic.planName) && (
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                              {(lic as any).plan_name || lic.planName}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td><StatusBadge status={lic.status} /></td>
                     <td>
                       <div className="text-xs">
-                        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{lic.currentUsers}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>/{lic.maxUsers}</span>
+                        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{(lic as any).current_users ?? lic.currentUsers ?? 0}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>/{(lic as any).max_users ?? lic.maxUsers}</span>
                       </div>
                     </td>
                     <td>
-                      {lic.endDate ? (
+                      {((lic as any).end_date || lic.endDate) ? (
                         <div>
-                          <div className="text-xs" style={{ color: 'var(--text-primary)' }}>{formatDate(lic.endDate)}</div>
-                          {lic.daysRemaining !== undefined && lic.daysRemaining !== null && (
-                            <div className={`text-xs font-semibold ${lic.daysRemaining <= 7 ? 'text-red-400' : lic.daysRemaining <= 30 ? 'text-yellow-400' : ''}`}
-                              style={lic.daysRemaining > 30 ? { color: 'var(--text-muted)' } : {}}>
-                              {lic.daysRemaining > 0 ? `${lic.daysRemaining}d restantes` : 'Vencida'}
+                          <div className="text-xs" style={{ color: 'var(--text-primary)' }}>{formatDate((lic as any).end_date || lic.endDate)}</div>
+                          {((lic as any).days_remaining ?? lic.daysRemaining) != null && (
+                            <div className={`text-xs font-semibold ${((lic as any).days_remaining ?? lic.daysRemaining) <= 7 ? 'text-red-400' : ((lic as any).days_remaining ?? lic.daysRemaining) <= 30 ? 'text-yellow-400' : ''}`}
+                              style={((lic as any).days_remaining ?? lic.daysRemaining) > 30 ? { color: 'var(--text-muted)' } : {}}>
+                              {((lic as any).days_remaining ?? lic.daysRemaining) > 0 ? `${(lic as any).days_remaining ?? lic.daysRemaining}d restantes` : 'Vencida'}
                             </div>
                           )}
                         </div>
@@ -145,7 +161,7 @@ export default function LicensesPage() {
                             <CheckCircle size={12} />
                           </button>
                         )}
-                        {(lic.status === 'activa' || lic.status === 'vencida') && lic.planType !== 'permanente' && (
+                        {(lic.status === 'activa' || lic.status === 'vencida') && (lic as any).plan_type !== 'permanente' && lic.planType !== 'permanente' && (
                           <button onClick={() => setRenewLicense(lic)} className="btn-secondary py-1 px-2 text-xs" title="Renovar">
                             <RefreshCw size={12} />
                           </button>

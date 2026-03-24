@@ -132,10 +132,10 @@ export default function ExpensesPage() {
                   <tr key={exp.id}>
                     <td className="text-sm" style={{ color: 'var(--text-primary)' }}>{exp.description}</td>
                     <td>
-                      {exp.categoryName && (
+                      {((exp as any).category_name || exp.categoryName) && (
                         <div className="flex items-center gap-1.5">
-                          <div className="w-2 h-2 rounded-full" style={{ background: exp.categoryColor }} />
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{exp.categoryName}</span>
+                          <div className="w-2 h-2 rounded-full" style={{ background: (exp as any).category_color || exp.categoryColor }} />
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{(exp as any).category_name || exp.categoryName}</span>
                         </div>
                       )}
                     </td>

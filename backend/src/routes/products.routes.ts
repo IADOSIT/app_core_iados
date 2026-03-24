@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
-  getProducts, createProduct, updateProduct, deleteProduct, addPlan, regenerateApiSecret,
-  getNotes, addNote, deleteNote, revealAdminPassword,
+  getProducts, createProduct, updateProduct, deleteProduct, addPlan, updatePlan, deletePlan,
+  regenerateApiSecret, getNotes, addNote, deleteNote, revealAdminPassword,
 } from '../controllers/products.controller';
 import { authenticate, requireRole } from '../middleware/auth.middleware';
 
@@ -13,6 +13,8 @@ router.post('/', createProduct);
 router.put('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
 router.post('/:id/plans', addPlan);
+router.put('/:id/plans/:planId', updatePlan);
+router.delete('/:id/plans/:planId', deletePlan);
 router.post('/:id/regenerate-secret', regenerateApiSecret);
 
 // Vault - reveal password (admin/manager only)

@@ -76,7 +76,7 @@ export const updatePaymentStatus = async (req: AuthRequest, res: Response): Prom
     const result = await query(
       `UPDATE payments SET status=$1, paid_at=$2, reference=COALESCE($3, reference), updated_at=NOW()
        WHERE id=$4 RETURNING *`,
-      [status, status === 'completado' ? (paidAt || 'NOW()') : paidAt, reference, id]
+      [status, status === 'completado' ? (paidAt || new Date()) : (paidAt || null), reference, id]
     );
 
     if (result.rowCount === 0) {

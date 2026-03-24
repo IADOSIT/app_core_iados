@@ -13,18 +13,19 @@ interface LicenseFormProps {
 
 export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFormProps) {
   const isEdit = !!license;
-  const [selectedProduct, setSelectedProduct] = useState(license?.productId || '');
+  const [selectedProduct, setSelectedProduct] = useState((license as any)?.product_id || license?.productId || '');
 
+  const r = license as any;
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      clientId: license?.clientId || '',
-      productId: license?.productId || '',
-      planId: license?.planId || '',
-      versionId: license?.versionId || '',
-      maxUsers: license?.maxUsers || 1,
-      startDate: license?.startDate ? license.startDate.slice(0, 10) : '',
-      endDate: license?.endDate ? license.endDate.slice(0, 10) : '',
-      autoRenew: license?.autoRenew || false,
+      clientId: r?.client_id || license?.clientId || '',
+      productId: r?.product_id || license?.productId || '',
+      planId: r?.plan_id || license?.planId || '',
+      versionId: r?.version_id || license?.versionId || '',
+      maxUsers: r?.max_users ?? license?.maxUsers ?? 1,
+      startDate: (r?.start_date || license?.startDate || '').slice(0, 10),
+      endDate: (r?.end_date || license?.endDate || '').slice(0, 10),
+      autoRenew: r?.auto_renew ?? license?.autoRenew ?? false,
       notes: license?.notes || '',
     },
   });
@@ -54,10 +55,9 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
   });
 
   const onSubmit = (data: Record<string, unknown>) => {
-    // In edit mode, disabled selects won't submit — inject the original values
     if (isEdit) {
-      data.clientId = license!.clientId;
-      data.productId = license!.productId;
+      data.clientId = (license as any)?.client_id || license!.clientId;
+      data.productId = (license as any)?.product_id || license!.productId;
     }
     mutation.mutate(data);
   };
@@ -72,9 +72,9 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
           <>
             <input
               className="input"
-              value={clients.find((c: { id: string }) => c.id === license?.clientId)
-                ? (() => { const c = clients.find((c: { id: string }) => c.id === license?.clientId) as { company_name?: string; first_name?: string; last_name?: string }; return c?.company_name || `${c?.first_name} ${c?.last_name}`; })()
-                : license?.clientId || ''}
+              value={clients.find((c: { id: string }) => c.id === (r?.client_id || license?.clientId))
+                ? (() => { const c = clients.find((c: { id: string }) => c.id === (r?.client_id || license?.clientId)) as { company_name?: string; first_name?: string; last_name?: string }; return c?.company_name || `${c?.first_name} ${c?.last_name}`; })()
+                : (r?.company_name || r?.client_first || license?.clientId || '')}
               readOnly
               style={{ opacity: 0.7 }}
             />
@@ -95,9 +95,9 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
           {isEdit ? (
             <input
               className="input"
-              value={products.find((p: { id: string }) => p.id === license?.productId)
-                ? (products.find((p: { id: string; name: string }) => p.id === license?.productId) as { name: string })?.name
-                : license?.productId || ''}
+              value={products.find((p: { id: string }) => p.id === (r?.product_id || license?.productId))
+                ? (products.find((p: { id: string; name: string }) => p.id === (r?.product_id || license?.productId)) as { name: string })?.name
+                : (r?.product_name || license?.productId || '')}
               readOnly
               style={{ opacity: 0.7 }}
             />

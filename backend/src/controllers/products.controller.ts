@@ -208,6 +208,38 @@ export const addPlan = async (req: AuthRequest, res: Response): Promise<void> =>
   }
 };
 
+export const updatePlan = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { planId } = req.params;
+    const { name, type, priceMxn, priceUsd, maxUsers, durationDays } = req.body;
+    const maxUsersVal = maxUsers !== '' && maxUsers != null ? Number(maxUsers) : null;
+    const durationDaysVal = durationDays !== '' && durationDays != null ? Number(durationDays) : null;
+    const result = await query(
+      `UPDATE product_plans SET name=$1, type=$2, price_mxn=$3, price_usd=$4,
+       max_users=$5, duration_days=$6
+       WHERE id=$7 RETURNING *`,
+      [name, type, priceMxn || 0, priceUsd || 0, maxUsersVal, durationDaysVal, planId]
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Plan no encontrado' });
+      return;
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: `Error al actualizar plan: ${err.message}` });
+  }
+};
+
+export const deletePlan = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { planId } = req.params;
+    await query(`UPDATE product_plans SET is_active=false WHERE id=$1`, [planId]);
+    res.json({ success: true, message: 'Plan eliminado' });
+  } catch {
+    res.status(500).json({ success: false, message: 'Error al eliminar plan' });
+  }
+};
+
 export const regenerateApiSecret = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

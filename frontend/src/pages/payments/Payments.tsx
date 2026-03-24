@@ -98,17 +98,17 @@ export default function PaymentsPage() {
                 {payments.map((pay) => (
                   <tr key={pay.id}>
                     <td>
-                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{pay.companyName || `${pay.clientFirst || ''} ${pay.clientLast || ''}`}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{(pay as any).company_name || `${(pay as any).client_first || ''} ${(pay as any).client_last || ''}`.trim() || '—'}</div>
                     </td>
                     <td>
                       <div className="font-semibold text-primary-300">{formatCurrency(pay.amount, pay.currency)}</div>
-                      {pay.currency === 'USD' && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>= {formatCurrency(pay.amountMxn)} MXN</div>}
+                      {pay.currency === 'USD' && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>= {formatCurrency((pay as any).amount_mxn)} MXN</div>}
                     </td>
                     <td className="text-xs">{pay.method ? methodLabels[pay.method] : '—'}</td>
                     <td><StatusBadge status={pay.status} /></td>
-                    <td className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{pay.invoiceNumber || '—'}</td>
-                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.paidAt ? formatDate(pay.paidAt) : '—'}</td>
-                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.dueDate ? formatDate(pay.dueDate) : '—'}</td>
+                    <td className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{(pay as any).invoice_number || '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{((pay as any).paid_at) ? formatDate((pay as any).paid_at) : '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{((pay as any).due_date) ? formatDate((pay as any).due_date) : '—'}</td>
                     <td>
                       <div className="flex items-center gap-1">
                         {pay.status === 'pendiente' && (
