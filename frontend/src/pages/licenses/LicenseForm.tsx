@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { licensesApi, clientsApi, productsApi, versionsApi } from '../../services/api';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { License } from '../../types';
 
 interface LicenseFormProps {
@@ -16,7 +16,7 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
   const [selectedProduct, setSelectedProduct] = useState((license as any)?.product_id || license?.productId || '');
 
   const r = license as any;
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
       clientId: r?.client_id || license?.clientId || '',
       productId: r?.product_id || license?.productId || '',
@@ -40,6 +40,21 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
 
   const selectedProductData = products.find((p: { id: string }) => p.id === selectedProduct);
   const plans = selectedProductData?.plans || [];
+
+  // Cuando las opciones cargan asincrónicamente, forzar el valor correcto en los selects
+  useEffect(() => {
+    if (isEdit && plans.length > 0) {
+      const planId = r?.plan_id || license?.planId || '';
+      if (planId) setValue('planId', planId);
+    }
+  }, [plans.length]);
+
+  useEffect(() => {
+    if (isEdit && versions.length > 0) {
+      const versionId = r?.version_id || license?.versionId || '';
+      if (versionId) setValue('versionId', versionId);
+    }
+  }, [versions.length]);
 
   const mutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
