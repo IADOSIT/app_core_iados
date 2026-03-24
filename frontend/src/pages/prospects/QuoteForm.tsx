@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Upload, FileText, Image, X, Eye } from 'lucide-react';
-import { prospectsApi, BACKEND_URL } from '../../services/api';
+import { prospectsApi } from '../../services/api';
 
 interface Quote {
   id: string;
@@ -28,8 +28,7 @@ interface Props {
 
 function getFileUrl(path: string | null | undefined) {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return `${BACKEND_URL}${path}`;
+  return path; // served via nginx /uploads/ proxy, same origin
 }
 
 function isImage(url: string) {

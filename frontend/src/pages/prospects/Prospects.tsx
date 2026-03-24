@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   Plus, Search, UserPlus, Mail, Phone, Calendar, FileText,
   Pencil, Trash2, ChevronDown, ChevronUp, AlertCircle,
   TrendingUp, DollarSign, Clock, Tag, User, Eye, Image, X,
 } from 'lucide-react';
-import { prospectsApi, BACKEND_URL } from '../../services/api';
+import { prospectsApi } from '../../services/api';
 import toast from 'react-hot-toast';
 import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -72,8 +72,7 @@ function fmt(n: number, cur = 'MXN') {
 
 function getFileUrl(path: string | null | undefined) {
   if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return `${BACKEND_URL}${path}`;
+  return path; // served via nginx /uploads/ proxy, same origin
 }
 function isPdf(url: string) { return /\.pdf$/i.test(url); }
 
@@ -110,6 +109,7 @@ function ProspectCard({ prospect, onEdit, onDelete, onAddQuote, onEditQuote, onD
     queryKey: ['prospect', prospect.id],
     queryFn: () => prospectsApi.getOne(prospect.id),
     enabled: expanded,
+    placeholderData: keepPreviousData,
   });
   const allQuotes: Quote[] = detailData?.data?.data?.quotes || [];
 
