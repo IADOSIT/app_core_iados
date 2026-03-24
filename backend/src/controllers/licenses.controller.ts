@@ -113,12 +113,15 @@ export const createLicense = async (req: AuthRequest, res: Response): Promise<vo
 export const updateLicense = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { status, maxUsers, endDate, autoRenew, notes, versionId } = req.body;
+    const { status, maxUsers, endDate, autoRenew, notes, versionId, planId } = req.body;
 
     const result = await query(
-      `UPDATE licenses SET status=$1, max_users=$2, end_date=$3, auto_renew=$4, notes=$5, version_id=$6, updated_at=NOW()
-       WHERE id=$7 RETURNING *`,
-      [status, maxUsers || null, endDate || null, autoRenew, notes, versionId && versionId !== '' ? versionId : null, id]
+      `UPDATE licenses SET status=$1, max_users=$2, end_date=$3, auto_renew=$4, notes=$5, version_id=$6, plan_id=$7, updated_at=NOW()
+       WHERE id=$8 RETURNING *`,
+      [status, maxUsers || null, endDate || null, autoRenew, notes,
+       versionId && versionId !== '' ? versionId : null,
+       planId && planId !== '' ? planId : null,
+       id]
     );
 
     if (result.rowCount === 0) {

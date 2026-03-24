@@ -56,8 +56,9 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
 
   const onSubmit = (data: Record<string, unknown>) => {
     if (isEdit) {
-      data.clientId = (license as any)?.client_id || license!.clientId;
-      data.productId = (license as any)?.product_id || license!.productId;
+      data.clientId = r?.client_id || license!.clientId;
+      data.productId = r?.product_id || license!.productId;
+      data.status = license!.status;
     }
     mutation.mutate(data);
   };
