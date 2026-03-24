@@ -20,7 +20,7 @@ services:
       DB_NAME: core_iados
       DB_USER: administrador
       DB_PASSWORD: U191tl1ebFN2RJR0fld5QhC8U29AhdOQ
-      DB_SSL: "true"
+      DB_SSL: "false"
 
       # JWT
       JWT_SECRET: CHANGE_THIS_TO_A_STRONG_RANDOM_SECRET
