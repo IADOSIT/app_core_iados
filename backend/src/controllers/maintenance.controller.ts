@@ -235,6 +235,7 @@ export const deleteDemoData = async (req: Request, res: Response) => {
 
     // Delete in dependency order (children before parents)
     if (sections.versions) {
+      await query(`DELETE FROM client_version_history`);
       const r = await query(`DELETE FROM software_versions`);
       counts.versiones = r.rowCount ?? 0;
     }
