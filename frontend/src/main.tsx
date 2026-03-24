@@ -3,7 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import { initTheme } from './store/themeStore';
 import './index.css';
+
+initTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,17 +25,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Toaster
         position="top-right"
         toastOptions={{
+          className: 'toast-themed',
           style: {
-            background: '#1A1A24',
-            color: '#fff',
-            border: '1px solid rgba(0,230,118,0.2)',
             borderRadius: '12px',
           },
           success: {
-            iconTheme: { primary: '#00E676', secondary: '#0A0A0F' },
+            iconTheme: { primary: '#00C853', secondary: '#fff' },
           },
           error: {
-            iconTheme: { primary: '#FF5252', secondary: '#0A0A0F' },
+            iconTheme: { primary: '#FF5252', secondary: '#fff' },
           },
         }}
       />

@@ -8,7 +8,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
       {/* Sidebar Desktop */}
       <div className="hidden md:flex">
         <Sidebar

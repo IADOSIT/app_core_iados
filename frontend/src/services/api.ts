@@ -87,6 +87,7 @@ export const licensesApi = {
   update: (id: string, data: Record<string, unknown>) => api.put(`/licenses/${id}`, data),
   activate: (id: string) => api.post(`/licenses/${id}/activate`),
   renew: (id: string, data: { newEndDate: string }) => api.post(`/licenses/${id}/renew`, data),
+  delete: (id: string) => api.delete(`/licenses/${id}`),
 };
 
 // ========================
@@ -97,6 +98,7 @@ export const paymentsApi = {
   getStats: (year?: number) => api.get('/payments/stats', { params: { year } }),
   create: (data: Record<string, unknown>) => api.post('/payments', data),
   updateStatus: (id: string, data: Record<string, unknown>) => api.patch(`/payments/${id}/status`, data),
+  delete: (id: string) => api.delete(`/payments/${id}`),
 };
 
 // ========================
@@ -107,6 +109,7 @@ export const invoicesApi = {
   getOne: (id: string) => api.get(`/invoices/${id}`),
   create: (data: Record<string, unknown>) => api.post('/invoices', data),
   updateStatus: (id: string, data: Record<string, unknown>) => api.patch(`/invoices/${id}/status`, data),
+  delete: (id: string) => api.delete(`/invoices/${id}`),
 };
 
 // ========================
@@ -117,6 +120,7 @@ export const productsApi = {
   create: (data: Record<string, unknown>) => api.post('/products', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/products/${id}`, data),
   addPlan: (id: string, data: Record<string, unknown>) => api.post(`/products/${id}/plans`, data),
+  regenerateSecret: (id: string) => api.post(`/products/${id}/regenerate-secret`),
 };
 
 // ========================
@@ -149,7 +153,21 @@ export const usersApi = {
   getRoles: () => api.get('/users/roles'),
   create: (data: Record<string, unknown>) => api.post('/users', data),
   update: (id: string, data: Record<string, unknown>) => api.put(`/users/${id}`, data),
+  toggleActive: (id: string) => api.patch(`/users/${id}/toggle-active`),
+  resetPassword: (id: string, data: { newPassword: string }) => api.post(`/users/${id}/reset-password`, data),
   changePassword: (data: Record<string, unknown>) => api.post('/users/change-password', data),
+};
+
+// ========================
+// MAINTENANCE
+// ========================
+export const maintenanceApi = {
+  getStats: () => api.get('/maintenance/stats'),
+  getBackupConfig: () => api.get('/maintenance/backup-config'),
+  updateBackupConfig: (data: Record<string, unknown>) => api.put('/maintenance/backup-config', data),
+  testSftp: (data: Record<string, unknown>) => api.post('/maintenance/backup-config/test', data),
+  runBackup: (uploadToSftp?: boolean) => api.post('/maintenance/backup', { uploadToSftpFlag: uploadToSftp !== false }),
+  deleteDemoData: () => api.delete('/maintenance/demo-data'),
 };
 
 // ========================

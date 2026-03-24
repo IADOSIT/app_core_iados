@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Pencil, X } from 'lucide-react';
 import { invoicesApi } from '../../services/api';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -17,6 +17,7 @@ export default function InvoicesPage() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', page, status],
@@ -27,6 +28,17 @@ export default function InvoicesPage() {
     mutationFn: (id: string) => invoicesApi.updateStatus(id, { status: 'pagada' }),
     onSuccess: () => { toast.success('Factura marcada como pagada'); qc.invalidateQueries({ queryKey: ['invoices'] }); },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => invoicesApi.delete(id),
+    onSuccess: () => { toast.success('Factura cancelada'); qc.invalidateQueries({ queryKey: ['invoices'] }); },
+    onError: () => toast.error('Error al cancelar la factura'),
+  });
+
+  const handleDelete = (inv: Invoice) => {
+    if (!window.confirm('¿Cancelar esta factura?')) return;
+    deleteMutation.mutate(inv.id);
+  };
 
   const invoices: Invoice[] = data?.data?.data || [];
   const total = data?.data?.total || 0;
@@ -78,21 +90,42 @@ export default function InvoicesPage() {
                   <tr key={inv.id}>
                     <td className="font-mono text-xs text-primary-300">{inv.invoiceNumber}</td>
                     <td>
-                      <div className="text-sm text-white">{inv.companyName || `${inv.clientFirst || ''} ${inv.clientLast || ''}`}</div>
-                      <div className="text-xs text-gray-500">{inv.clientRfc}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{inv.companyName || `${inv.clientFirst || ''} ${inv.clientLast || ''}`}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{inv.clientRfc}</div>
                     </td>
                     <td><StatusBadge status={inv.status} /></td>
                     <td className="text-sm">{formatCurrency(inv.subtotal, inv.currency)}</td>
-                    <td className="text-sm text-gray-400">{formatCurrency(inv.tax, inv.currency)}</td>
-                    <td className="font-semibold text-white">{formatCurrency(inv.total, inv.currency)}</td>
+                    <td className="text-sm" style={{ color: 'var(--text-muted)' }}>{formatCurrency(inv.tax, inv.currency)}</td>
+                    <td className="font-semibold" style={{ color: 'var(--text-primary)' }}>{formatCurrency(inv.total, inv.currency)}</td>
                     <td className="text-xs">{inv.currency}</td>
-                    <td className="text-xs text-gray-500">{inv.dueDate ? formatDate(inv.dueDate) : '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{inv.dueDate ? formatDate(inv.dueDate) : '—'}</td>
                     <td>
-                      {inv.status === 'emitida' && (
-                        <button onClick={() => markPaid.mutate(inv.id)} className="btn-secondary py-1 px-2 text-xs">
-                          Marcar Pagada
+                      <div className="flex items-center gap-1">
+                        {inv.status === 'emitida' && (
+                          <button onClick={() => markPaid.mutate(inv.id)} className="btn-secondary py-1 px-2 text-xs">
+                            Marcar Pagada
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setEditInvoice(inv)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                          title="Editar"
+                        >
+                          <Pencil size={13} />
                         </button>
-                      )}
+                        {inv.status === 'borrador' && (
+                          <button
+                            onClick={() => handleDelete(inv)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                            title="Cancelar factura"
+                            disabled={deleteMutation.isPending}
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -108,6 +141,16 @@ export default function InvoicesPage() {
       {showForm && (
         <Modal title="Nueva Factura" onClose={() => setShowForm(false)} size="xl">
           <InvoiceForm onSuccess={() => { setShowForm(false); qc.invalidateQueries({ queryKey: ['invoices'] }); }} onCancel={() => setShowForm(false)} />
+        </Modal>
+      )}
+
+      {editInvoice && (
+        <Modal title="Editar Factura" onClose={() => setEditInvoice(null)} size="xl">
+          <InvoiceForm
+            invoice={editInvoice}
+            onSuccess={() => { setEditInvoice(null); qc.invalidateQueries({ queryKey: ['invoices'] }); }}
+            onCancel={() => setEditInvoice(null)}
+          />
         </Modal>
       )}
     </div>

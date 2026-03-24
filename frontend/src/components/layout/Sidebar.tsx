@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Key, CreditCard, FileText,
   Package, GitBranch, TrendingDown, BarChart3, Settings,
-  LogOut, ChevronLeft, ChevronRight, Bell,
+  LogOut, ChevronLeft, ChevronRight, UserCog, Wrench,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../services/api';
@@ -23,6 +23,8 @@ const navItems = [
   { to: '/versions', icon: GitBranch, label: 'Versiones' },
   { to: '/expenses', icon: TrendingDown, label: 'Gastos' },
   { to: '/reports', icon: BarChart3, label: 'Reportes' },
+  { to: '/users', icon: UserCog, label: 'Usuarios' },
+  { to: '/maintenance', icon: Wrench, label: 'Mantenimiento' },
 ];
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -44,8 +46,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       className="relative flex flex-col h-full transition-all duration-300"
       style={{
         width: collapsed ? '72px' : '240px',
-        background: 'linear-gradient(180deg, #0D0D14 0%, #0A0A0F 100%)',
-        borderRight: '1px solid rgba(0, 230, 118, 0.1)',
+        background: 'var(--bg-sidebar)',
+        borderRight: '1px solid var(--border)',
       }}
     >
       {/* Logo */}
@@ -56,7 +58,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className="overflow-hidden">
             <div className="font-bold text-base leading-tight text-gradient whitespace-nowrap">Core iados</div>
-            <div className="text-xs text-gray-500 whitespace-nowrap">CRM Platform</div>
+            <div className="text-xs whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>CRM Platform</div>
           </div>
         )}
       </div>
@@ -66,9 +68,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         onClick={onToggle}
         className="absolute -right-3 top-16 w-6 h-6 rounded-full flex items-center justify-center z-10 transition-all"
         style={{
-          background: '#1A1A24',
-          border: '1px solid rgba(0,230,118,0.3)',
-          color: '#00E676',
+          background: 'var(--bg-surface-solid)',
+          border: '1px solid var(--border-nav-active)',
+          color: 'var(--accent)',
         }}
       >
         {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
@@ -92,7 +94,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Bottom */}
-      <div className="p-2 border-t border-white/5 space-y-0.5">
+      <div className="p-2 space-y-0.5" style={{ borderTop: '1px solid var(--border-divider)' }}>
         <NavLink
           to="/settings"
           className={({ isActive }) =>
@@ -106,16 +108,16 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* User info */}
         {!collapsed && user && (
-          <div className="flex items-center gap-2 p-2 rounded-xl mt-1" style={{ background: 'rgba(255,255,255,0.03)' }}>
+          <div className="flex items-center gap-2 p-2 rounded-xl mt-1" style={{ background: 'var(--bg-hover)' }}>
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #00E676, #00C853)', color: '#0A0A0F' }}
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))', color: 'var(--accent-btn-text)' }}
             >
               {user.firstName?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold text-white truncate">{user.firstName} {user.lastName}</div>
-              <div className="text-xs text-gray-500 truncate capitalize">{user.roleName}</div>
+              <div className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{user.firstName} {user.lastName}</div>
+              <div className="text-xs truncate capitalize" style={{ color: 'var(--text-muted)' }}>{user.roleName}</div>
             </div>
             <button
               onClick={handleLogout}

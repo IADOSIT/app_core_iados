@@ -101,14 +101,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#0A0A0F' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: 'var(--bg)' }}>
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       {/* Glow background */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,230,118,0.07) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 70%)',
         }}
       />
 
@@ -118,34 +118,34 @@ export default function LoginPage() {
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
             style={{
-              background: 'rgba(0,230,118,0.08)',
-              border: '1px solid rgba(0,230,118,0.25)',
-              boxShadow: '0 0 30px rgba(0,230,118,0.15)',
+              background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+              boxShadow: '0 0 30px color-mix(in srgb, var(--accent) 15%, transparent)',
             }}
           >
             <img src="/logos/logo_iados.svg" alt="iados" className="w-10 h-10 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gradient">Core iados</h1>
-          <p className="text-sm text-gray-500 mt-1">Plataforma CRM</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Plataforma CRM</p>
         </div>
 
         {/* Card */}
         <div
           className="rounded-2xl p-8"
           style={{
-            background: 'linear-gradient(145deg, rgba(26,26,36,0.95), rgba(14,14,20,0.98))',
-            border: '1px solid rgba(0,230,118,0.15)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,230,118,0.05)',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-surface)',
+            boxShadow: 'var(--shadow-card)',
           }}
         >
-          <h2 className="text-xl font-bold text-white mb-1">Iniciar Sesión</h2>
-          <p className="text-sm text-gray-500 mb-6">Ingresa tus credenciales para continuar</p>
+          <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Iniciar Sesión</h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>Ingresa tus credenciales para continuar</p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Email</label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 <input
                   type="email"
                   className={`input pl-9 ${errors.email ? 'border-red-500/50' : ''}`}
@@ -157,9 +157,9 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Contraseña</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>Contraseña</label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className={`input pl-9 pr-10 ${errors.password ? 'border-red-500/50' : ''}`}
@@ -169,7 +169,8 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
                 >
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -183,7 +184,7 @@ export default function LoginPage() {
               className="btn-primary w-full justify-center py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="w-4 h-4 border-2 border-dark/40 border-t-dark rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               ) : (
                 <LogIn size={16} />
               )}
@@ -192,7 +193,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-600 mt-6">
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--text-muted)' }}>
           © 2024 iados.mx — Todos los derechos reservados
         </p>
       </div>

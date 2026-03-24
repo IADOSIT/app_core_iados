@@ -58,14 +58,14 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       {/* Tipo y Estado */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tipo *</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Tipo *</label>
           <select className="select" {...register('type', { required: true })}>
             <option value="empresa">Empresa</option>
             <option value="persona_fisica">Persona Física</option>
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Estado</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Estado</label>
           <select className="select" {...register('status')}>
             <option value="prospecto">Prospecto</option>
             <option value="activo">Activo</option>
@@ -79,15 +79,15 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       {clientType === 'empresa' && (
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Razón Social / Nombre Empresa *</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Razón Social / Nombre Empresa *</label>
             <input className="input" placeholder="Empresa S.A. de C.V." {...register('companyName', { required: clientType === 'empresa' })} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">RFC</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>RFC</label>
             <input className="input" placeholder="XAXX010101000" {...register('rfc')} />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-400 mb-1.5">Industria</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Industria</label>
             <input className="input" placeholder="Tecnología, Manufactura..." {...register('industry')} />
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       {/* Nombre contacto */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>
             {clientType === 'empresa' ? 'Nombre Contacto' : 'Nombre *'}
           </label>
           <input
@@ -106,7 +106,7 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Apellido</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Apellido</label>
           <input className="input" placeholder="García" {...register('lastName')} />
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       {/* Contacto */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email *</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Email *</label>
           <input
             type="email"
             className={`input ${errors.email ? 'border-red-500/50' : ''}`}
@@ -123,18 +123,18 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Teléfono</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Teléfono</label>
           <input className="input" placeholder="+52 55 1234 5678" {...register('phone')} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">WhatsApp</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>WhatsApp</label>
           <input className="input" placeholder="+52 55 1234 5678" {...register('whatsapp')} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Sitio Web</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Sitio Web</label>
           <input className="input" placeholder="https://empresa.com" {...register('website')} />
         </div>
       </div>
@@ -142,15 +142,15 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       {/* Dirección */}
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Ciudad</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Ciudad</label>
           <input className="input" placeholder="CDMX" {...register('city')} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Estado</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Estado</label>
           <input className="input" placeholder="Ciudad de México" {...register('state')} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Personas</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Personas</label>
           <select className="select" {...register('profitPersonCount', { valueAsNumber: true })}>
             <option value={2}>2 personas</option>
             <option value={3}>3 personas</option>
@@ -159,7 +159,7 @@ export default function ClientForm({ client, onSuccess, onCancel }: ClientFormPr
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Notas</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Notas</label>
         <textarea
           className="input resize-none"
           rows={3}

@@ -7,6 +7,40 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================
+-- TIPOS ENUM (idempotentes)
+-- ============================================================
+
+DO $$ BEGIN CREATE TYPE client_type AS ENUM ('empresa', 'persona_fisica');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE client_status AS ENUM ('activo', 'inactivo', 'prospecto', 'suspendido');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE plan_type AS ENUM ('permanente', 'mensual', 'por_implementacion');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE currency_type AS ENUM ('MXN', 'USD');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE license_status AS ENUM ('activa', 'vencida', 'suspendida', 'cancelada', 'pendiente');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE invoice_status AS ENUM ('borrador', 'emitida', 'pagada', 'cancelada', 'vencida');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE payment_status AS ENUM ('pendiente', 'completado', 'fallido', 'reembolsado', 'cancelado');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE payment_method AS ENUM ('transferencia', 'tarjeta', 'efectivo', 'stripe', 'mercadopago', 'cheque', 'otro');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE subscription_status AS ENUM ('activa', 'pausada', 'cancelada', 'vencida');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN CREATE TYPE notification_type AS ENUM ('licencia_vencimiento', 'pago_pendiente', 'pago_recibido', 'cliente_nuevo', 'suscripcion_renovacion', 'sistema', 'otro');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================
 -- ROLES Y USUARIOS
 -- ============================================================
 
@@ -45,31 +79,24 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 -- CLIENTES
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS client_type AS ENUM ('empresa', 'persona_fisica');
-CREATE TYPE IF NOT EXISTS client_status AS ENUM ('activo', 'inactivo', 'prospecto', 'suspendido');
-
 CREATE TABLE IF NOT EXISTS clients (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type client_type NOT NULL DEFAULT 'empresa',
   status client_status NOT NULL DEFAULT 'prospecto',
-  -- Empresa
   company_name VARCHAR(255),
   rfc VARCHAR(20),
   industry VARCHAR(100),
   website TEXT,
-  -- Persona / Contacto principal
   first_name VARCHAR(100),
   last_name VARCHAR(100),
   email VARCHAR(255),
   phone VARCHAR(20),
   whatsapp VARCHAR(20),
-  -- Dirección
   address TEXT,
   city VARCHAR(100),
   state VARCHAR(100),
   country VARCHAR(100) DEFAULT 'México',
   postal_code VARCHAR(10),
-  -- Configuración
   profit_person_count INTEGER DEFAULT 2 CHECK (profit_person_count IN (2, 3)),
   assigned_to UUID REFERENCES users(id),
   notes TEXT,
@@ -104,9 +131,6 @@ CREATE TABLE IF NOT EXISTS client_branches (
 -- ============================================================
 -- PRODUCTOS Y PLANES
 -- ============================================================
-
-CREATE TYPE IF NOT EXISTS plan_type AS ENUM ('permanente', 'mensual', 'por_implementacion');
-CREATE TYPE IF NOT EXISTS currency_type AS ENUM ('MXN', 'USD');
 
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -164,8 +188,6 @@ CREATE TABLE IF NOT EXISTS client_version_history (
 -- LICENCIAS
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS license_status AS ENUM ('activa', 'vencida', 'suspendida', 'cancelada', 'pendiente');
-
 CREATE TABLE IF NOT EXISTS licenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   license_key VARCHAR(255) NOT NULL UNIQUE,
@@ -190,8 +212,6 @@ CREATE TABLE IF NOT EXISTS licenses (
 -- ============================================================
 -- FACTURAS
 -- ============================================================
-
-CREATE TYPE IF NOT EXISTS invoice_status AS ENUM ('borrador', 'emitida', 'pagada', 'cancelada', 'vencida');
 
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -231,9 +251,6 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 -- PAGOS
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS payment_status AS ENUM ('pendiente', 'completado', 'fallido', 'reembolsado', 'cancelado');
-CREATE TYPE IF NOT EXISTS payment_method AS ENUM ('transferencia', 'tarjeta', 'efectivo', 'stripe', 'mercadopago', 'cheque', 'otro');
-
 CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID REFERENCES clients(id),
@@ -258,8 +275,6 @@ CREATE TABLE IF NOT EXISTS payments (
 -- ============================================================
 -- SUSCRIPCIONES
 -- ============================================================
-
-CREATE TYPE IF NOT EXISTS subscription_status AS ENUM ('activa', 'pausada', 'cancelada', 'vencida');
 
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -330,11 +345,6 @@ CREATE TABLE IF NOT EXISTS profit_margins (
 -- ============================================================
 -- NOTIFICACIONES
 -- ============================================================
-
-CREATE TYPE IF NOT EXISTS notification_type AS ENUM (
-  'licencia_vencimiento', 'pago_pendiente', 'pago_recibido',
-  'cliente_nuevo', 'suscripcion_renovacion', 'sistema', 'otro'
-);
 
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

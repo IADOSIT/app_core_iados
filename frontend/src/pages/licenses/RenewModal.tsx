@@ -26,15 +26,15 @@ export default function RenewModal({ license, onSuccess, onCancel }: RenewModalP
   return (
     <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
       <div className="p-3 rounded-xl" style={{ background: 'rgba(0,230,118,0.05)', border: '1px solid rgba(0,230,118,0.1)' }}>
-        <p className="text-xs text-gray-400">Licencia actual</p>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Licencia actual</p>
         <p className="font-mono text-sm text-primary-300 mt-1">{license.licenseKey}</p>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
           Vencimiento actual: {license.endDate ? formatDate(license.endDate) : 'N/A'}
         </p>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Nueva Fecha de Vencimiento *</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Nueva Fecha de Vencimiento *</label>
         <input type="date" className="input" {...register('newEndDate', { required: true })} />
       </div>
 

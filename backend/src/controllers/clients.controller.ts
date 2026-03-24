@@ -25,7 +25,16 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
     const result = await query(
       `SELECT c.*, u.first_name as assigned_first, u.last_name as assigned_last,
               (SELECT COUNT(*) FROM licenses l WHERE l.client_id = c.id AND l.status = 'activa') as active_licenses,
-              (SELECT COUNT(*) FROM payments p WHERE p.client_id = c.id AND p.status = 'pendiente') as pending_payments
+              (SELECT COUNT(*) FROM payments p WHERE p.client_id = c.id AND p.status = 'pendiente') as pending_payments,
+              (
+                SELECT json_agg(json_build_object(
+                  'productId', p.id, 'productName', p.name,
+                  'systemUrl', p.system_url, 'status', l.status
+                ))
+                FROM licenses l
+                JOIN products p ON l.product_id = p.id
+                WHERE l.client_id = c.id AND l.status IN ('activa','pendiente')
+              ) as active_products
        FROM clients c
        LEFT JOIN users u ON c.assigned_to = u.id
        ${where} ORDER BY c.created_at DESC LIMIT $${idx++} OFFSET $${idx}`,

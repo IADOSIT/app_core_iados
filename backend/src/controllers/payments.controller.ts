@@ -120,3 +120,20 @@ export const getPaymentStats = async (req: AuthRequest, res: Response): Promise<
     res.status(500).json({ success: false, message: 'Error al obtener estadísticas' });
   }
 };
+
+export const deletePayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(
+      `UPDATE payments SET status='cancelado' WHERE id=$1 AND status='pendiente' RETURNING id`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      res.status(400).json({ success: false, message: 'Solo se pueden cancelar pagos pendientes' });
+      return;
+    }
+    res.json({ success: true, message: 'Pago cancelado' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al cancelar pago' });
+  }
+};

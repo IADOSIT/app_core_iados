@@ -50,13 +50,13 @@ export default function ClientDetailPage() {
               className="w-12 h-12 rounded-2xl flex items-center justify-center"
               style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)' }}
             >
-              {client.type === 'empresa' ? <Building2 size={20} style={{ color: '#00E676' }} /> : <User size={20} style={{ color: '#00E676' }} />}
+              {client.type === 'empresa' ? <Building2 size={20} style={{ color: 'var(--accent)' }} /> : <User size={20} style={{ color: 'var(--accent)' }} />}
             </div>
             <div>
               <h1 className="page-title">{clientDisplayName(client)}</h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <StatusBadge status={client.status} />
-                <span className="text-xs text-gray-500 capitalize">{client.type === 'empresa' ? 'Empresa' : 'Persona Física'}</span>
+                <span className="text-xs capitalize" style={{ color: 'var(--text-muted)' }}>{client.type === 'empresa' ? 'Empresa' : 'Persona Física'}</span>
               </div>
             </div>
           </div>
@@ -70,28 +70,26 @@ export default function ClientDetailPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="card p-4 text-center">
           <p className="text-2xl font-bold text-primary-300">{client.activeLicenses || 0}</p>
-          <p className="text-xs text-gray-500 mt-1">Licencias Activas</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Licencias Activas</p>
         </div>
         <div className="card p-4 text-center">
           <p className="text-2xl font-bold text-yellow-400">{client.pendingPayments || 0}</p>
-          <p className="text-xs text-gray-500 mt-1">Pagos Pendientes</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Pagos Pendientes</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-white">{client.contacts?.length || 0}</p>
-          <p className="text-xs text-gray-500 mt-1">Contactos</p>
+          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{client.contacts?.length || 0}</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Contactos</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key as typeof tab)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
-              tab === key ? 'text-dark bg-primary-300' : 'text-gray-400 hover:text-white'
-            }`}
-            style={tab === key ? { background: 'linear-gradient(135deg,#00E676,#00C853)', color: '#0A0A0F' } : {}}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all"
+            style={tab === key ? { background: 'linear-gradient(135deg,#00E676,#00C853)', color: 'var(--accent-btn-text)' } : { color: 'var(--text-muted)' }}
           >
             <Icon size={13} />
             {label}
@@ -103,66 +101,66 @@ export default function ClientDetailPage() {
       {tab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-white">Información de Contacto</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Información de Contacto</h3>
             <div className="space-y-2.5">
               {client.email && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Mail size={14} className="text-gray-500" />
-                  <span className="text-gray-300">{client.email}</span>
+                  <Mail size={14} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>{client.email}</span>
                 </div>
               )}
               {client.phone && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Phone size={14} className="text-gray-500" />
-                  <span className="text-gray-300">{client.phone}</span>
+                  <Phone size={14} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>{client.phone}</span>
                 </div>
               )}
               {client.website && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Globe size={14} className="text-gray-500" />
+                  <Globe size={14} style={{ color: 'var(--text-muted)' }} />
                   <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:underline">{client.website}</a>
                 </div>
               )}
               {(client.city || client.state) && (
                 <div className="flex items-center gap-2 text-sm">
-                  <MapPin size={14} className="text-gray-500" />
-                  <span className="text-gray-300">{[client.city, client.state, client.country].filter(Boolean).join(', ')}</span>
+                  <MapPin size={14} style={{ color: 'var(--text-muted)' }} />
+                  <span style={{ color: 'var(--text-secondary)' }}>{[client.city, client.state, client.country].filter(Boolean).join(', ')}</span>
                 </div>
               )}
             </div>
 
             {client.rfc && (
               <div>
-                <p className="text-xs text-gray-500">RFC</p>
-                <p className="text-sm font-mono text-gray-300 mt-0.5">{client.rfc}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>RFC</p>
+                <p className="text-sm font-mono mt-0.5" style={{ color: 'var(--text-secondary)' }}>{client.rfc}</p>
               </div>
             )}
 
             {client.notes && (
               <div>
-                <p className="text-xs text-gray-500">Notas</p>
-                <p className="text-sm text-gray-400 mt-0.5">{client.notes}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Notas</p>
+                <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{client.notes}</p>
               </div>
             )}
           </div>
 
           <div className="card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-white">Contactos Adicionales</h3>
+            <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Contactos Adicionales</h3>
             {client.contacts && client.contacts.length > 0 ? (
               <div className="space-y-2">
                 {client.contacts.map((contact) => (
-                  <div key={contact.id} className="flex items-start justify-between py-2 border-b border-white/5 last:border-0">
+                  <div key={contact.id} className="flex items-start justify-between py-2 last:border-0" style={{ borderBottom: '1px solid var(--border-divider)' }}>
                     <div>
-                      <p className="text-sm text-white">{contact.firstName} {contact.lastName}</p>
-                      <p className="text-xs text-gray-500">{contact.position}</p>
-                      <p className="text-xs text-gray-500">{contact.email}</p>
+                      <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{contact.firstName} {contact.lastName}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{contact.position}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{contact.email}</p>
                     </div>
                     {contact.isPrimary && <span className="badge badge-green text-xs">Principal</span>}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500">Sin contactos adicionales</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin contactos adicionales</p>
             )}
           </div>
         </div>
@@ -171,7 +169,7 @@ export default function ClientDetailPage() {
       {tab === 'licenses' && (
         <div className="card">
           {(client.licenses?.length || 0) === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">Sin licencias asignadas</div>
+            <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin licencias asignadas</div>
           ) : (
             <div className="table-wrapper">
               <table>
@@ -193,7 +191,7 @@ export default function ClientDetailPage() {
                       <td><StatusBadge status={lic.planType || ''} /></td>
                       <td><StatusBadge status={lic.status} /></td>
                       <td className="text-xs">{lic.currentUsers}/{lic.maxUsers}</td>
-                      <td className="text-xs text-gray-500">{lic.endDate ? formatDate(lic.endDate) : 'Permanente'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{lic.endDate ? formatDate(lic.endDate) : 'Permanente'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -206,7 +204,7 @@ export default function ClientDetailPage() {
       {tab === 'payments' && (
         <div className="card">
           {(client.payments?.length || 0) === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">Sin pagos registrados</div>
+            <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin pagos registrados</div>
           ) : (
             <div className="table-wrapper">
               <table>
@@ -227,8 +225,8 @@ export default function ClientDetailPage() {
                       <td className="text-xs">{pay.currency}</td>
                       <td className="text-xs capitalize">{pay.method || '—'}</td>
                       <td><StatusBadge status={pay.status} /></td>
-                      <td className="text-xs text-gray-500">{pay.paidAt ? formatDate(pay.paidAt) : formatDate(pay.createdAt)}</td>
-                      <td className="text-xs text-gray-500 font-mono">{pay.reference || '—'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.paidAt ? formatDate(pay.paidAt) : formatDate(pay.createdAt)}</td>
+                      <td className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{pay.reference || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -241,7 +239,7 @@ export default function ClientDetailPage() {
       {tab === 'versions' && (
         <div className="card">
           {(client.versionHistory?.length || 0) === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">Sin historial de versiones</div>
+            <div className="p-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>Sin historial de versiones</div>
           ) : (
             <div className="table-wrapper">
               <table>
@@ -259,9 +257,9 @@ export default function ClientDetailPage() {
                     <tr key={vh.id}>
                       <td className="font-mono text-xs text-primary-300">{vh.version}</td>
                       <td className="text-sm">{vh.productName}</td>
-                      <td className="text-xs text-gray-500">{vh.assignedByFirst || '—'}</td>
-                      <td className="text-xs text-gray-500">{formatDate(vh.assignedAt)}</td>
-                      <td className="text-xs text-gray-500">{vh.notes || '—'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.assignedByFirst || '—'}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(vh.assignedAt)}</td>
+                      <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{vh.notes || '—'}</td>
                     </tr>
                   ))}
                 </tbody>

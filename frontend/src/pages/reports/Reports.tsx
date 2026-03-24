@@ -11,8 +11,8 @@ import { formatCurrency } from '../../utils/format';
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
     return (
-      <div className="rounded-xl px-3 py-2 text-xs" style={{ background: '#1A1A24', border: '1px solid rgba(0,230,118,0.2)' }}>
-        <p className="font-semibold text-white mb-1">{label}</p>
+      <div className="rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--bg-surface)', border: '1px solid rgba(0,230,118,0.2)' }}>
+        <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{label}</p>
         {payload.map((p: any) => (
           <p key={p.name} style={{ color: p.color }}>{p.name}: {typeof p.value === 'number' && p.value > 100 ? formatCurrency(p.value) : p.value}</p>
         ))}
@@ -74,13 +74,13 @@ export default function ReportsPage() {
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Ingresos Totales', value: formatCurrency(totalIncome), color: '#00E676' },
+          { label: 'Ingresos Totales', value: formatCurrency(totalIncome), color: 'var(--accent)' },
           { label: 'Gastos Totales', value: formatCurrency(totalExpenses), color: '#FF5252' },
-          { label: 'Ganancia Neta', value: formatCurrency(totalProfit), color: totalProfit >= 0 ? '#00E676' : '#FF5252' },
-          { label: 'Margen de Ganancia', value: `${marginPct}%`, color: marginPct >= 30 ? '#00E676' : marginPct >= 10 ? '#FFC107' : '#FF5252' },
+          { label: 'Ganancia Neta', value: formatCurrency(totalProfit), color: totalProfit >= 0 ? 'var(--accent)' : '#FF5252' },
+          { label: 'Margen de Ganancia', value: `${marginPct}%`, color: marginPct >= 30 ? 'var(--accent)' : marginPct >= 10 ? '#FFC107' : '#FF5252' },
         ].map((kpi) => (
           <div key={kpi.label} className="card p-4">
-            <p className="text-xs text-gray-500">{kpi.label}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{kpi.label}</p>
             <p className="text-xl font-bold mt-1" style={{ color: kpi.color }}>{kpi.value}</p>
           </div>
         ))}
@@ -88,7 +88,7 @@ export default function ReportsPage() {
 
       {/* Ganancia mensual */}
       <div className="card p-5">
-        <h3 className="text-sm font-semibold text-white mb-4">Ingresos, Gastos y Ganancia — {year}</h3>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Ingresos, Gastos y Ganancia — {year}</h3>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={profit} barGap={4}>
             <defs>
@@ -102,10 +102,10 @@ export default function ReportsPage() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis dataKey="month" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} />
-            <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+            <XAxis dataKey="month" tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} />
+            <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 11, color: '#9CA3AF' }} />
+            <Legend wrapperStyle={{ fontSize: 11, color: '#94A3B8' }} />
             <Bar dataKey="income" name="Ingresos" fill="url(#incGrad)" radius={[4, 4, 0, 0]} />
             <Bar dataKey="expenses" name="Gastos" fill="url(#expGrad)" radius={[4, 4, 0, 0]} />
             <Line type="monotone" dataKey="profit" name="Ganancia" stroke="#69F0AE" strokeWidth={2} dot={{ fill: '#69F0AE', r: 3 }} />
@@ -115,7 +115,7 @@ export default function ReportsPage() {
 
       {/* Margen mensual */}
       <div className="card p-5">
-        <h3 className="text-sm font-semibold text-white mb-4">Margen de Ganancia Mensual (%)</h3>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Margen de Ganancia Mensual (%)</h3>
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={profit}>
             <defs>
@@ -125,8 +125,8 @@ export default function ReportsPage() {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis dataKey="month" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} />
-            <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `${v}%`} />
+            <XAxis dataKey="month" tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} />
+            <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `${v}%`} />
             <Tooltip content={<CustomTooltip />} />
             <Area type="monotone" dataKey="margin_pct" name="Margen %" stroke="#00E676" fill="url(#marginGrad)" strokeWidth={2} />
           </AreaChart>
@@ -136,9 +136,9 @@ export default function ReportsPage() {
       {/* Por método pago y por categoría gasto */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="card p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Ingresos por Método de Pago</h3>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Ingresos por Método de Pago</h3>
           {payByMethod.length === 0 ? (
-            <p className="text-xs text-gray-500 text-center py-8">Sin datos disponibles</p>
+            <p className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>Sin datos disponibles</p>
           ) : (
             <div className="space-y-3">
               {payByMethod.map((item: { method: string; total: number; count: number }, i: number) => {
@@ -148,13 +148,13 @@ export default function ReportsPage() {
                 return (
                   <div key={item.method}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs text-gray-300 capitalize">{item.method || 'Sin especificar'}</span>
+                      <span className="text-xs capitalize" style={{ color: 'var(--text-secondary)' }}>{item.method || 'Sin especificar'}</span>
                       <span className="text-xs font-semibold text-primary-300">{formatCurrency(item.total)}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/5">
+                    <div className="h-1.5 rounded-full" style={{ background: 'var(--bg-hover)' }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: colors[i % colors.length] }} />
                     </div>
-                    <p className="text-xs text-gray-600 mt-0.5">{item.count} transacciones</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{item.count} transacciones</p>
                   </div>
                 );
               })}
@@ -163,9 +163,9 @@ export default function ReportsPage() {
         </div>
 
         <div className="card p-5">
-          <h3 className="text-sm font-semibold text-white mb-4">Gastos por Categoría</h3>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Gastos por Categoría</h3>
           {expByCategory.length === 0 ? (
-            <p className="text-xs text-gray-500 text-center py-8">Sin datos disponibles</p>
+            <p className="text-xs text-center py-8" style={{ color: 'var(--text-muted)' }}>Sin datos disponibles</p>
           ) : (
             <div className="space-y-3">
               {expByCategory.map((item: { name: string; color: string; total: number }) => {
@@ -176,11 +176,11 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                        <span className="text-xs text-gray-300">{item.name}</span>
+                        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{item.name}</span>
                       </div>
                       <span className="text-xs font-semibold text-red-400">{formatCurrency(item.total)}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/5">
+                    <div className="h-1.5 rounded-full" style={{ background: 'var(--bg-hover)' }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: item.color }} />
                     </div>
                   </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Key, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Plus, Key, AlertTriangle, CheckCircle, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import { licensesApi } from '../../services/api';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -19,6 +19,7 @@ export default function LicensesPage() {
   const [status, setStatus] = useState('');
   const [expiringSoon, setExpiringSoon] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editLicense, setEditLicense] = useState<License | null>(null);
   const [renewLicense, setRenewLicense] = useState<License | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -33,6 +34,20 @@ export default function LicensesPage() {
       qc.invalidateQueries({ queryKey: ['licenses'] });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => licensesApi.delete(id),
+    onSuccess: () => {
+      toast.success('Licencia eliminada');
+      qc.invalidateQueries({ queryKey: ['licenses'] });
+    },
+    onError: () => toast.error('Error al eliminar la licencia'),
+  });
+
+  const handleDelete = (lic: License) => {
+    if (!window.confirm(`¿Eliminar permanentemente la licencia ${lic.licenseKey}?\nEsta acción no se puede deshacer.`)) return;
+    deleteMutation.mutate(lic.id);
+  };
 
   const licenses: License[] = data?.data?.data || [];
   const total = data?.data?.total || 0;
@@ -96,24 +111,25 @@ export default function LicensesPage() {
                       </span>
                     </td>
                     <td>
-                      <div className="text-sm text-white">{lic.companyName || `${lic.clientFirst || ''} ${lic.clientLast || ''}`}</div>
-                      <div className="text-xs text-gray-500">{lic.clientEmail}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{lic.companyName || `${lic.clientFirst || ''} ${lic.clientLast || ''}`}</div>
+                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{lic.clientEmail}</div>
                     </td>
                     <td className="text-sm">{lic.productName}</td>
                     <td>{lic.planType && <StatusBadge status={lic.planType} />}</td>
                     <td><StatusBadge status={lic.status} /></td>
                     <td>
                       <div className="text-xs">
-                        <span className="text-white font-semibold">{lic.currentUsers}</span>
-                        <span className="text-gray-500">/{lic.maxUsers}</span>
+                        <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{lic.currentUsers}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>/{lic.maxUsers}</span>
                       </div>
                     </td>
                     <td>
                       {lic.endDate ? (
                         <div>
-                          <div className="text-xs text-white">{formatDate(lic.endDate)}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-primary)' }}>{formatDate(lic.endDate)}</div>
                           {lic.daysRemaining !== undefined && lic.daysRemaining !== null && (
-                            <div className={`text-xs font-semibold ${lic.daysRemaining <= 7 ? 'text-red-400' : lic.daysRemaining <= 30 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                            <div className={`text-xs font-semibold ${lic.daysRemaining <= 7 ? 'text-red-400' : lic.daysRemaining <= 30 ? 'text-yellow-400' : ''}`}
+                              style={lic.daysRemaining > 30 ? { color: 'var(--text-muted)' } : {}}>
                               {lic.daysRemaining > 0 ? `${lic.daysRemaining}d restantes` : 'Vencida'}
                             </div>
                           )}
@@ -134,6 +150,23 @@ export default function LicensesPage() {
                             <RefreshCw size={12} />
                           </button>
                         )}
+                        <button
+                          onClick={() => setEditLicense(lic)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                          title="Editar"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(lic)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'rgba(255,82,82,0.1)', color: '#FF5252' }}
+                          title="Eliminar licencia"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -150,6 +183,16 @@ export default function LicensesPage() {
       {showForm && (
         <Modal title="Nueva Licencia" onClose={() => setShowForm(false)} size="lg">
           <LicenseForm onSuccess={() => { setShowForm(false); qc.invalidateQueries({ queryKey: ['licenses'] }); }} onCancel={() => setShowForm(false)} />
+        </Modal>
+      )}
+
+      {editLicense && (
+        <Modal title="Editar Licencia" onClose={() => setEditLicense(null)} size="lg">
+          <LicenseForm
+            license={editLicense}
+            onSuccess={() => { setEditLicense(null); qc.invalidateQueries({ queryKey: ['licenses'] }); }}
+            onCancel={() => setEditLicense(null)}
+          />
         </Modal>
       )}
 

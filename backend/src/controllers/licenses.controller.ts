@@ -166,3 +166,17 @@ export const renewLicense = async (req: AuthRequest, res: Response): Promise<voi
     res.status(500).json({ success: false, message: 'Error al renovar licencia' });
   }
 };
+
+export const deleteLicense = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(`DELETE FROM licenses WHERE id=$1 RETURNING id`, [id]);
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Licencia no encontrada' });
+      return;
+    }
+    res.json({ success: true, message: 'Licencia eliminada' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al eliminar licencia' });
+  }
+};

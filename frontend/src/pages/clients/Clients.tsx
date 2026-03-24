@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Users, Building2, User, ExternalLink } from 'lucide-react';
+import { Plus, Search, Users, Building2, User, ExternalLink, Pencil, Package } from 'lucide-react';
 import { clientsApi } from '../../services/api';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -20,6 +20,7 @@ export default function ClientsPage() {
   const [status, setStatus] = useState('');
   const [type, setType] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editClient, setEditClient] = useState<Client | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients', page, search, status, type],
@@ -44,7 +45,7 @@ export default function ClientsPage() {
       {/* Filters */}
       <div className="card p-4 flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
             placeholder="Buscar por nombre, empresa, email..."
@@ -96,9 +97,8 @@ export default function ClientsPage() {
               <thead>
                 <tr>
                   <th>Cliente</th>
-                  <th>Tipo</th>
+                  <th>Sistema(s) activo(s)</th>
                   <th>Estado</th>
-                  <th>Licencias</th>
                   <th>Pagos Pend.</th>
                   <th>Creado</th>
                   <th>Acciones</th>
@@ -111,40 +111,70 @@ export default function ClientsPage() {
                       <div className="flex items-center gap-3">
                         <div
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ background: 'rgba(0,230,118,0.1)', color: '#00E676' }}
+                          style={{ background: 'rgba(0,230,118,0.1)', color: 'var(--accent)' }}
                         >
                           {client.type === 'empresa' ? <Building2 size={14} /> : <User size={14} />}
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{clientDisplayName(client)}</div>
-                          <div className="text-xs text-gray-500">{client.email || client.rfc || '—'}</div>
+                          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{clientDisplayName(client)}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{client.email || client.rfc || '—'}</div>
                         </div>
                       </div>
                     </td>
                     <td>
-                      <span className="text-xs text-gray-400 capitalize">
-                        {client.type === 'empresa' ? 'Empresa' : 'Persona Física'}
-                      </span>
+                      {(client as any).activeProducts?.length ? (
+                        <div className="flex flex-wrap gap-1">
+                          {(client as any).activeProducts.map((ap: { productId: string; productName: string; systemUrl?: string; status: string }) => (
+                            <a
+                              key={ap.productId}
+                              href={ap.systemUrl || '#'}
+                              target={ap.systemUrl ? '_blank' : undefined}
+                              rel="noopener noreferrer"
+                              title={ap.systemUrl || ap.productName}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
+                              style={{
+                                background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+                                color: 'var(--accent)',
+                                border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+                                textDecoration: 'none',
+                              }}
+                            >
+                              <Package size={10} />
+                              {ap.productName}
+                              {ap.systemUrl && <ExternalLink size={9} />}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin licencias activas</span>
+                      )}
                     </td>
                     <td><StatusBadge status={client.status} /></td>
-                    <td>
-                      <span className="badge badge-green">{client.activeLicenses || 0}</span>
-                    </td>
                     <td>
                       {(client.pendingPayments || 0) > 0 ? (
                         <span className="badge badge-yellow">{client.pendingPayments}</span>
                       ) : (
-                        <span className="text-xs text-gray-600">—</span>
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
                       )}
                     </td>
-                    <td className="text-xs text-gray-500">{formatDate(client.createdAt)}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(client.createdAt)}</td>
                     <td>
-                      <button
-                        onClick={() => navigate(`/clients/${client.id}`)}
-                        className="btn-ghost py-1 px-2 text-xs"
-                      >
-                        <ExternalLink size={12} /> Ver
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/clients/${client.id}`)}
+                          className="btn-ghost py-1 px-2 text-xs"
+                        >
+                          <ExternalLink size={12} /> Ver
+                        </button>
+                        <button
+                          onClick={() => setEditClient(client)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                          title="Editar cliente"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -166,6 +196,19 @@ export default function ClientsPage() {
               qc.invalidateQueries({ queryKey: ['clients'] });
             }}
             onCancel={() => setShowForm(false)}
+          />
+        </Modal>
+      )}
+
+      {editClient && (
+        <Modal title="Editar Cliente" onClose={() => setEditClient(null)} size="lg">
+          <ClientForm
+            client={editClient}
+            onSuccess={() => {
+              setEditClient(null);
+              qc.invalidateQueries({ queryKey: ['clients'] });
+            }}
+            onCancel={() => setEditClient(null)}
           />
         </Modal>
       )}

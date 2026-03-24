@@ -129,3 +129,20 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
     res.status(500).json({ success: false, message: 'Error al actualizar factura' });
   }
 };
+
+export const deleteInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const result = await query(
+      `UPDATE invoices SET status='cancelada', updated_at=NOW() WHERE id=$1 AND status='borrador' RETURNING id`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      res.status(400).json({ success: false, message: 'Solo se pueden cancelar facturas en borrador' });
+      return;
+    }
+    res.json({ success: true, message: 'Factura cancelada' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al cancelar factura' });
+  }
+};

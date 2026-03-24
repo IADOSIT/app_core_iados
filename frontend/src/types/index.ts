@@ -11,6 +11,7 @@ export interface User {
   phone?: string;
   lastLogin?: string;
   roleDisplay?: string;
+  isActive?: boolean;
 }
 
 // ========================
@@ -111,6 +112,9 @@ export interface Product {
   basePriceMxn: number;
   basePriceUsd: number;
   isActive: boolean;
+  apiSlug?: string;
+  systemUrl?: string;
+  apiSecret?: string;
   plans?: ProductPlan[];
   createdAt: string;
 }
@@ -286,6 +290,7 @@ export interface DashboardData {
   recentActivity: ActivityLog[];
   topClients: { id: string; name: string; totalPaid: number; paymentCount: number }[];
   incomeVsExpenses: { monthNum: number; month: string; income: number; expenses: number; profit: number }[];
+  productStats?: { id: string; name: string; systemUrl?: string; activeLicenses: number; activeClients: number; revenueYear: number; revenueMonth: number }[];
 }
 
 export interface ActivityLog {

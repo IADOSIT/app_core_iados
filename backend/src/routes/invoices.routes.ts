@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getInvoices, getInvoice, createInvoice, updateInvoiceStatus } from '../controllers/invoices.controller';
+import { getInvoices, getInvoice, createInvoice, updateInvoiceStatus, deleteInvoice } from '../controllers/invoices.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -9,5 +9,6 @@ router.get('/', getInvoices);
 router.get('/:id', getInvoice);
 router.post('/', createInvoice);
 router.patch('/:id/status', updateInvoiceStatus);
+router.delete('/:id', deleteInvoice);
 
 export default router;

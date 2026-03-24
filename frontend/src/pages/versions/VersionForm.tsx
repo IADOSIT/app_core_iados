@@ -25,7 +25,7 @@ export default function VersionForm({ onSuccess, onCancel }: VersionFormProps) {
   return (
     <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Producto *</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Producto *</label>
         <select className="select" {...register('productId', { required: true })}>
           <option value="">Seleccionar...</option>
           {products.map((p: { id: string; name: string }) => (
@@ -36,31 +36,31 @@ export default function VersionForm({ onSuccess, onCancel }: VersionFormProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Versión * (ej: 2.1.0)</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Versión * (ej: 2.1.0)</label>
           <input className="input font-mono" placeholder="1.0.0" {...register('version', { required: true })} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Nombre de versión</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Nombre de versión</label>
           <input className="input" placeholder="ej: Actualización Mayor" {...register('versionName')} />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Notas de lanzamiento</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Notas de lanzamiento</label>
         <textarea className="input resize-none" rows={3} placeholder="Cambios, mejoras, correcciones..." {...register('releaseNotes')} />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Fecha de lanzamiento</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Fecha de lanzamiento</label>
         <input type="date" className="input" {...register('releasedAt')} />
       </div>
 
       <div className="flex gap-4">
-        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--text-muted)' }}>
           <input type="checkbox" className="accent-primary-300 w-4 h-4" {...register('isStable')} />
           Versión estable
         </label>
-        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+        <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--text-muted)' }}>
           <input type="checkbox" className="accent-primary-300 w-4 h-4" {...register('isLatest')} />
           Versión más reciente (latest)
         </label>

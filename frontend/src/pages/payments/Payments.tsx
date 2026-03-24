@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, CreditCard, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, CreditCard, CheckCircle, Pencil, X } from 'lucide-react';
 import { paymentsApi } from '../../services/api';
 import StatusBadge from '../../components/ui/StatusBadge';
 import Pagination from '../../components/ui/Pagination';
@@ -17,6 +17,7 @@ export default function PaymentsPage() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editPayment, setEditPayment] = useState<Payment | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['payments', page, status],
@@ -27,6 +28,17 @@ export default function PaymentsPage() {
     mutationFn: (id: string) => paymentsApi.updateStatus(id, { status: 'completado', paidAt: new Date().toISOString() }),
     onSuccess: () => { toast.success('Pago confirmado'); qc.invalidateQueries({ queryKey: ['payments'] }); },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => paymentsApi.delete(id),
+    onSuccess: () => { toast.success('Pago cancelado'); qc.invalidateQueries({ queryKey: ['payments'] }); },
+    onError: () => toast.error('Error al cancelar el pago'),
+  });
+
+  const handleDelete = (pay: Payment) => {
+    if (!window.confirm('¿Cancelar este pago?')) return;
+    deleteMutation.mutate(pay.id);
+  };
 
   const payments: Payment[] = data?.data?.data || [];
   const total = data?.data?.total || 0;
@@ -86,23 +98,44 @@ export default function PaymentsPage() {
                 {payments.map((pay) => (
                   <tr key={pay.id}>
                     <td>
-                      <div className="text-sm text-white">{pay.companyName || `${pay.clientFirst || ''} ${pay.clientLast || ''}`}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-primary)' }}>{pay.companyName || `${pay.clientFirst || ''} ${pay.clientLast || ''}`}</div>
                     </td>
                     <td>
                       <div className="font-semibold text-primary-300">{formatCurrency(pay.amount, pay.currency)}</div>
-                      {pay.currency === 'USD' && <div className="text-xs text-gray-500">= {formatCurrency(pay.amountMxn)} MXN</div>}
+                      {pay.currency === 'USD' && <div className="text-xs" style={{ color: 'var(--text-muted)' }}>= {formatCurrency(pay.amountMxn)} MXN</div>}
                     </td>
                     <td className="text-xs">{pay.method ? methodLabels[pay.method] : '—'}</td>
                     <td><StatusBadge status={pay.status} /></td>
-                    <td className="text-xs font-mono text-gray-500">{pay.invoiceNumber || '—'}</td>
-                    <td className="text-xs text-gray-500">{pay.paidAt ? formatDate(pay.paidAt) : '—'}</td>
-                    <td className="text-xs text-gray-500">{pay.dueDate ? formatDate(pay.dueDate) : '—'}</td>
+                    <td className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{pay.invoiceNumber || '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.paidAt ? formatDate(pay.paidAt) : '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{pay.dueDate ? formatDate(pay.dueDate) : '—'}</td>
                     <td>
-                      {pay.status === 'pendiente' && (
-                        <button onClick={() => confirmMutation.mutate(pay.id)} className="btn-secondary py-1 px-2 text-xs">
-                          <CheckCircle size={12} /> Confirmar
+                      <div className="flex items-center gap-1">
+                        {pay.status === 'pendiente' && (
+                          <button onClick={() => confirmMutation.mutate(pay.id)} className="btn-secondary py-1 px-2 text-xs">
+                            <CheckCircle size={12} /> Confirmar
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setEditPayment(pay)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                          title="Editar"
+                        >
+                          <Pencil size={13} />
                         </button>
-                      )}
+                        {pay.status === 'pendiente' && (
+                          <button
+                            onClick={() => handleDelete(pay)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                            style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}
+                            title="Cancelar pago"
+                            disabled={deleteMutation.isPending}
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -118,6 +151,16 @@ export default function PaymentsPage() {
       {showForm && (
         <Modal title="Registrar Pago" onClose={() => setShowForm(false)} size="lg">
           <PaymentForm onSuccess={() => { setShowForm(false); qc.invalidateQueries({ queryKey: ['payments'] }); }} onCancel={() => setShowForm(false)} />
+        </Modal>
+      )}
+
+      {editPayment && (
+        <Modal title="Editar Pago" onClose={() => setEditPayment(null)} size="lg">
+          <PaymentForm
+            payment={editPayment}
+            onSuccess={() => { setEditPayment(null); qc.invalidateQueries({ queryKey: ['payments'] }); }}
+            onCancel={() => setEditPayment(null)}
+          />
         </Modal>
       )}
     </div>

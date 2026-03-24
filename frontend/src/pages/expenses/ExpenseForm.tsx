@@ -26,7 +26,7 @@ export default function ExpenseForm({ onSuccess, onCancel }: ExpenseFormProps) {
   return (
     <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Categoría</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Categoría</label>
         <select className="select" {...register('categoryId')}>
           <option value="">Sin categoría</option>
           {categories.map((c: { id: number; name: string; color: string }) => (
@@ -36,17 +36,17 @@ export default function ExpenseForm({ onSuccess, onCancel }: ExpenseFormProps) {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Descripción *</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Descripción *</label>
         <input className="input" placeholder="Ej: Renta servidor mensual" {...register('description', { required: true })} />
       </div>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2">
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Monto *</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Monto *</label>
           <input type="number" step="0.01" className="input" placeholder="0.00" {...register('amount', { required: true })} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Moneda</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Moneda</label>
           <select className="select" {...register('currency')}>
             <option value="MXN">MXN</option>
             <option value="USD">USD</option>
@@ -56,24 +56,24 @@ export default function ExpenseForm({ onSuccess, onCancel }: ExpenseFormProps) {
 
       {currency === 'USD' && (
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Tipo de cambio (USD→MXN)</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Tipo de cambio (USD→MXN)</label>
           <input type="number" step="0.01" className="input" {...register('exchangeRate', { valueAsNumber: true })} />
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Fecha *</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Fecha *</label>
           <input type="date" className="input" {...register('date', { required: true })} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Proveedor</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Proveedor</label>
           <input className="input" placeholder="Ej: AWS, CFE, etc." {...register('vendor')} />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Notas</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Notas</label>
         <textarea className="input resize-none" rows={2} {...register('notes')} />
       </div>
 

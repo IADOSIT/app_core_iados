@@ -13,6 +13,8 @@ import VersionsPage from './pages/versions/Versions';
 import ExpensesPage from './pages/expenses/Expenses';
 import ReportsPage from './pages/reports/Reports';
 import SettingsPage from './pages/settings/Settings';
+import UsersPage from './pages/users/Users';
+import MaintenancePage from './pages/maintenance/Maintenance';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -48,6 +50,8 @@ export default function App() {
           <Route path="versions" element={<VersionsPage />} />
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="maintenance" element={<MaintenancePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

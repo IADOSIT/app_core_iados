@@ -64,7 +64,7 @@ export default function VersionsPage() {
                       {v.isLatest && <Star size={12} className="text-yellow-400" fill="currentColor" />}
                       {v.isStable && <Shield size={12} className="text-green-400" />}
                     </div>
-                    <p className="text-xs text-gray-500">{v.productName}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{v.productName}</p>
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -73,14 +73,14 @@ export default function VersionsPage() {
                 </div>
               </div>
 
-              {v.versionName && <p className="text-xs text-gray-400">{v.versionName}</p>}
+              {v.versionName && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{v.versionName}</p>}
               {v.releaseNotes && (
-                <p className="text-xs text-gray-500 line-clamp-2 p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <p className="text-xs line-clamp-2 p-2 rounded-lg" style={{ color: 'var(--text-muted)', background: 'rgba(255,255,255,0.03)' }}>
                   {v.releaseNotes}
                 </p>
               )}
 
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
                 <span>Licencias: {v.licenseCount || 0}</span>
                 <span>{v.releasedAt ? formatDate(v.releasedAt) : formatDate(v.createdAt)}</span>
               </div>

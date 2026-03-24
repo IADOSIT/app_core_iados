@@ -71,13 +71,13 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
         {tabs.filter(t => !t.adminOnly || user?.roleName === 'admin').map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key as typeof tab)}
-            className={`flex items-center gap-1.5 py-2 px-4 rounded-lg text-xs font-semibold transition-all ${tab === key ? 'text-dark' : 'text-gray-400 hover:text-white'}`}
-            style={tab === key ? { background: 'linear-gradient(135deg,#00E676,#00C853)', color: '#0A0A0F' } : {}}
+            className="flex items-center gap-1.5 py-2 px-4 rounded-lg text-xs font-semibold transition-all"
+            style={tab === key ? { background: 'linear-gradient(135deg,#00E676,#00C853)', color: 'var(--accent-btn-text)' } : { color: 'var(--text-muted)' }}
           >
             <Icon size={13} />{label}
           </button>
@@ -111,16 +111,16 @@ export default function SettingsPage() {
                       <tr key={u.id}>
                         <td>
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(0,230,118,0.1)', color: '#00E676' }}>
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(0,230,118,0.1)', color: 'var(--accent)' }}>
                               {u.firstName?.[0]?.toUpperCase() || 'U'}
                             </div>
-                            <span className="text-sm text-white">{u.firstName} {u.lastName}</span>
+                            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{u.firstName} {u.lastName}</span>
                           </div>
                         </td>
-                        <td className="text-sm text-gray-400">{u.email}</td>
+                        <td className="text-sm" style={{ color: 'var(--text-muted)' }}>{u.email}</td>
                         <td><span className="badge badge-blue capitalize">{u.roleName}</span></td>
                         <td><span className={`badge ${u.isActive ? 'badge-green' : 'badge-red'}`}>{u.isActive ? 'Activo' : 'Inactivo'}</span></td>
-                        <td className="text-xs text-gray-500">{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('es-MX') : 'Nunca'}</td>
+                        <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('es-MX') : 'Nunca'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -134,26 +134,26 @@ export default function SettingsPage() {
       {/* Notifications Tab */}
       {tab === 'notifications' && (
         <div className="card p-5 max-w-lg">
-          <h3 className="text-sm font-semibold text-white mb-4">Preferencias de Notificaciones</h3>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Preferencias de Notificaciones</h3>
           <form onSubmit={handleNotif((d) => notifMutation.mutate(d))} className="space-y-4">
-            <div className="p-3 rounded-xl space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="p-3 rounded-xl space-y-3" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="accent-primary-300 w-4 h-4" {...regNotif('emailEnabled')} />
-                <span className="text-sm text-white">Notificaciones por Email</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Notificaciones por Email</span>
               </label>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Dirección de email</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Dirección de email</label>
                 <input className="input text-sm" placeholder="tu@email.com" {...regNotif('emailAddress')} />
               </div>
             </div>
 
-            <div className="p-3 rounded-xl space-y-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div className="p-3 rounded-xl space-y-3" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="accent-primary-300 w-4 h-4" {...regNotif('whatsappEnabled')} />
-                <span className="text-sm text-white">Notificaciones por WhatsApp</span>
+                <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Notificaciones por WhatsApp</span>
               </label>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Número WhatsApp</label>
+                <label className="block text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Número WhatsApp</label>
                 <input className="input text-sm" placeholder="+52 55 1234 5678" {...regNotif('whatsappNumber')} />
               </div>
             </div>
@@ -168,18 +168,18 @@ export default function SettingsPage() {
       {/* Password Tab */}
       {tab === 'password' && (
         <div className="card p-5 max-w-lg">
-          <h3 className="text-sm font-semibold text-white mb-4">Cambiar Contraseña</h3>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Cambiar Contraseña</h3>
           <form onSubmit={handlePwd((d) => pwdMutation.mutate(d))} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Contraseña actual</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Contraseña actual</label>
               <input type="password" className="input" {...regPwd('currentPassword', { required: true })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Nueva contraseña</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Nueva contraseña</label>
               <input type="password" className="input" {...regPwd('newPassword', { required: true, minLength: { value: 8, message: 'Mínimo 8 caracteres' } })} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Confirmar contraseña</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Confirmar contraseña</label>
               <input type="password" className="input" {...regPwd('confirmPassword', { required: true })} />
             </div>
             <button type="submit" className="btn-primary justify-center w-full" disabled={pwdMutation.isPending}>

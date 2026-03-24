@@ -28,29 +28,29 @@ export default function UserForm({ onSuccess, onCancel }: UserFormProps) {
     <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Nombre *</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Nombre *</label>
           <input className="input" placeholder="Juan" {...register('firstName', { required: true })} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Apellido</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Apellido</label>
           <input className="input" placeholder="García" {...register('lastName')} />
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Email *</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Email *</label>
         <input type="email" className={`input ${errors.email ? 'border-red-500/50' : ''}`} placeholder="usuario@iados.mx" {...register('email', { required: true })} />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1.5">Contraseña *</label>
+        <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Contraseña *</label>
         <input type="password" className="input" placeholder="Mínimo 8 caracteres" {...register('password', { required: true, minLength: 8 })} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Teléfono</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Teléfono</label>
           <input className="input" {...register('phone')} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5">Rol</label>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-muted)' }}>Rol</label>
           <select className="select" {...register('roleId', { valueAsNumber: true })}>
             {roles.map((r: { id: number; displayName: string; name: string }) => (
               <option key={r.id} value={r.id}>{r.displayName || r.name}</option>

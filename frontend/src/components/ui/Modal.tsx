@@ -26,8 +26,12 @@ export default function Modal({ title, onClose, children, size = 'md' }: ModalPr
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal-content ${sizeMap[size]} w-full`}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors rounded-lg p-1 hover:bg-white/5">
+          <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+          <button
+            onClick={onClose}
+            className="transition-colors rounded-lg p-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
             <X size={18} />
           </button>
         </div>

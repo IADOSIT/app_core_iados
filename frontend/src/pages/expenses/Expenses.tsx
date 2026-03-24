@@ -58,12 +58,12 @@ export default function ExpensesPage() {
       {summary && (
         <div className="grid grid-cols-2 gap-4">
           <div className="card p-4">
-            <p className="text-xs text-gray-500">Gastos del mes</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Gastos del mes</p>
             <p className="text-2xl font-bold text-red-400 mt-1">{formatCurrency(summary.total_month)}</p>
           </div>
           <div className="card p-4">
-            <p className="text-xs text-gray-500">Gastos del año {year}</p>
-            <p className="text-2xl font-bold text-white mt-1">{formatCurrency(summary.total_year)}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Gastos del año {year}</p>
+            <p className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{formatCurrency(summary.total_year)}</p>
           </div>
         </div>
       )}
@@ -72,7 +72,7 @@ export default function ExpensesPage() {
       {byCategory.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Por Categoría</h3>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Por Categoría</h3>
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={byCategory} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="total">
@@ -87,20 +87,20 @@ export default function ExpensesPage() {
               {byCategory.map((cat: { name: string; color: string; total: number }) => (
                 <div key={cat.name} className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
-                  <span className="text-xs text-gray-400 truncate">{cat.name}</span>
-                  <span className="text-xs font-semibold text-white ml-auto">{formatCurrency(cat.total)}</span>
+                  <span className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{cat.name}</span>
+                  <span className="text-xs font-semibold ml-auto" style={{ color: 'var(--text-primary)' }}>{formatCurrency(cat.total)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="card p-5">
-            <h3 className="text-sm font-semibold text-white mb-4">Gastos Mensuales {year}</h3>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Gastos Mensuales {year}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={monthly} barSize={24}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} />
-                <YAxis tick={{ fill: '#6B7280', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                <XAxis dataKey="month" tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} />
+                <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 <Bar dataKey="total" name="Gastos" fill="#FF5252" radius={[4, 4, 0, 0]} fillOpacity={0.8} />
               </BarChart>
@@ -130,21 +130,23 @@ export default function ExpensesPage() {
               <tbody>
                 {expenses.map((exp) => (
                   <tr key={exp.id}>
-                    <td className="text-sm text-white">{exp.description}</td>
+                    <td className="text-sm" style={{ color: 'var(--text-primary)' }}>{exp.description}</td>
                     <td>
                       {exp.categoryName && (
                         <div className="flex items-center gap-1.5">
                           <div className="w-2 h-2 rounded-full" style={{ background: exp.categoryColor }} />
-                          <span className="text-xs text-gray-400">{exp.categoryName}</span>
+                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{exp.categoryName}</span>
                         </div>
                       )}
                     </td>
                     <td className="font-semibold text-red-400">{formatCurrency(exp.amount, exp.currency)}</td>
                     <td className="text-xs">{exp.currency}</td>
-                    <td className="text-xs text-gray-500">{exp.vendor || '—'}</td>
-                    <td className="text-xs text-gray-500">{formatDate(exp.date)}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{exp.vendor || '—'}</td>
+                    <td className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(exp.date)}</td>
                     <td>
-                      <button onClick={() => deleteMutation.mutate(exp.id)} className="text-gray-500 hover:text-red-400 p-1 transition-colors">
+                      <button onClick={() => deleteMutation.mutate(exp.id)} className="p-1 transition-colors" style={{ color: 'var(--text-muted)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = '#f87171')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}>
                         <Trash2 size={14} />
                       </button>
                     </td>

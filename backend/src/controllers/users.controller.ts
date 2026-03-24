@@ -101,3 +101,49 @@ export const getRoles = async (_req: AuthRequest, res: Response): Promise<void> 
     res.status(500).json({ success: false, message: 'Error al obtener roles' });
   }
 };
+
+export const toggleUserActive = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    if (id === req.user?.userId) {
+      res.status(400).json({ success: false, message: 'No puedes desactivar tu propio usuario' });
+      return;
+    }
+    const result = await query(
+      `UPDATE users SET is_active = NOT is_active, updated_at=NOW() WHERE id=$1 RETURNING id, email, is_active`,
+      [id]
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+      return;
+    }
+    const { is_active } = result.rows[0];
+    res.json({ success: true, data: result.rows[0], message: is_active ? 'Usuario activado' : 'Usuario desactivado' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al actualizar usuario' });
+  }
+};
+
+export const resetUserPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const bcrypt = await import('bcryptjs');
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ success: false, message: 'La contraseña debe tener al menos 6 caracteres' });
+      return;
+    }
+    const hash = await bcrypt.hash(newPassword, 12);
+    const result = await query(
+      'UPDATE users SET password_hash=$1, updated_at=NOW() WHERE id=$2 RETURNING id',
+      [hash, id]
+    );
+    if (result.rowCount === 0) {
+      res.status(404).json({ success: false, message: 'Usuario no encontrado' });
+      return;
+    }
+    res.json({ success: true, message: 'Contraseña actualizada' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error al resetear contraseña' });
+  }
+};

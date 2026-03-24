@@ -7,7 +7,7 @@ export const getDashboard = async (_req: AuthRequest, res: Response): Promise<vo
     const [
       kpis, revenueMonthly, clientsByStatus, licensesByStatus,
       expiringSoon, pendingPayments, recentActivity, topClients,
-      incomeVsExpenses,
+      incomeVsExpenses, productStats,
     ] = await Promise.all([
       // KPIs principales
       query(`
@@ -97,6 +97,23 @@ export const getDashboard = async (_req: AuthRequest, res: Response): Promise<vo
         ) exp ON exp.m = months.month_num
         ORDER BY month_num
       `),
+
+      // Productos: licencias activas + ingresos por producto
+      query(`
+        SELECT p.id, p.name, p.system_url,
+               COUNT(DISTINCT l.id) FILTER (WHERE l.status = 'activa') as active_licenses,
+               COUNT(DISTINCT l.client_id) FILTER (WHERE l.status = 'activa') as active_clients,
+               COALESCE(SUM(pay.amount_mxn) FILTER (WHERE pay.status='completado'
+                 AND EXTRACT(YEAR FROM pay.paid_at)=EXTRACT(YEAR FROM NOW())), 0) as revenue_year,
+               COALESCE(SUM(pay.amount_mxn) FILTER (WHERE pay.status='completado'
+                 AND EXTRACT(MONTH FROM pay.paid_at)=EXTRACT(MONTH FROM NOW())
+                 AND EXTRACT(YEAR FROM pay.paid_at)=EXTRACT(YEAR FROM NOW())), 0) as revenue_month
+        FROM products p
+        LEFT JOIN licenses l ON l.product_id = p.id
+        LEFT JOIN payments pay ON pay.client_id = l.client_id
+        GROUP BY p.id, p.name, p.system_url
+        ORDER BY active_licenses DESC
+      `),
     ]);
 
     res.json({
@@ -111,6 +128,7 @@ export const getDashboard = async (_req: AuthRequest, res: Response): Promise<vo
         recentActivity: recentActivity.rows,
         topClients: topClients.rows,
         incomeVsExpenses: incomeVsExpenses.rows,
+        productStats: productStats.rows,
       },
     });
   } catch (error) {
