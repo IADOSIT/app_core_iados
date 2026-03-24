@@ -121,6 +121,119 @@ export const getPaymentStats = async (req: AuthRequest, res: Response): Promise<
   }
 };
 
+export const getProjection = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const lastDay = new Date(year, month, 0).getDate();
+
+    // Team size from system_settings (default 3)
+    const settingRes = await query(`SELECT value FROM system_settings WHERE key = 'team_size'`);
+    const teamSize = settingRes.rows.length ? Number(settingRes.rows[0].value) : 3;
+
+    // Monthly licenses active + plan price
+    const licensesRes = await query(`
+      SELECT l.id as license_id, l.client_id,
+             COALESCE(c.company_name, c.first_name || ' ' || c.last_name) as client_name,
+             p.name as product_name, pp.name as plan_name,
+             COALESCE(pp.price_mxn, 0) as price_mxn,
+             c.payment_cutoff_day,
+             (SELECT COALESCE(SUM(pay.amount_mxn), 0)
+              FROM payments pay
+              WHERE pay.license_id = l.id
+                AND pay.status = 'completado'
+                AND EXTRACT(MONTH FROM pay.paid_at) = $1
+                AND EXTRACT(YEAR FROM pay.paid_at) = $2
+             ) as paid_this_month,
+             (SELECT COALESCE(SUM(pay.amount_mxn), 0)
+              FROM payments pay
+              WHERE pay.license_id = l.id
+                AND pay.status = 'pendiente'
+                AND EXTRACT(MONTH FROM COALESCE(pay.due_date, pay.created_at)) = $1
+                AND EXTRACT(YEAR FROM COALESCE(pay.due_date, pay.created_at)) = $2
+             ) as pending_this_month
+      FROM licenses l
+      JOIN clients c ON l.client_id = c.id
+      JOIN products p ON l.product_id = p.id
+      JOIN product_plans pp ON l.plan_id = pp.id
+      WHERE l.status = 'activa' AND pp.type = 'mensual'
+      ORDER BY c.payment_cutoff_day ASC NULLS LAST, client_name ASC
+    `, [month, year]);
+
+    // Payments already received this month
+    const receivedRes = await query(`
+      SELECT COALESCE(SUM(amount_mxn), 0) as total, COUNT(*) as count
+      FROM payments
+      WHERE status = 'completado'
+        AND EXTRACT(MONTH FROM paid_at) = $1
+        AND EXTRACT(YEAR FROM paid_at) = $2
+    `, [month, year]);
+
+    // Expenses this month
+    const expensesRes = await query(`
+      SELECT COALESCE(SUM(amount_mxn), 0) as total
+      FROM expenses
+      WHERE EXTRACT(MONTH FROM date) = $1
+        AND EXTRACT(YEAR FROM date) = $2
+    `, [month, year]);
+
+    const licenses = licensesRes.rows.map((l: any) => ({
+      licenseId: l.license_id,
+      clientId: l.client_id,
+      clientName: l.client_name,
+      productName: l.product_name,
+      planName: l.plan_name,
+      priceMxn: Number(l.price_mxn),
+      cutoffDay: l.payment_cutoff_day,
+      dueDate: l.payment_cutoff_day ? `${year}-${String(month).padStart(2, '0')}-${String(Math.min(l.payment_cutoff_day, lastDay)).padStart(2, '0')}` : null,
+      paidThisMonth: Number(l.paid_this_month),
+      pendingThisMonth: Number(l.pending_this_month),
+      status: Number(l.paid_this_month) > 0 ? 'pagado' : (Number(l.pending_this_month) > 0 ? 'pendiente' : 'sin_registro'),
+    }));
+
+    const projectedIncome = licenses.reduce((s: number, l: any) => s + l.priceMxn, 0);
+    const receivedThisMonth = Number(receivedRes.rows[0].total);
+    const expensesThisMonth = Number(expensesRes.rows[0].total);
+    const netProjected = projectedIncome - expensesThisMonth;
+    const perPerson = teamSize > 0 ? netProjected / teamSize : 0;
+    const paidCount = licenses.filter((l: any) => l.status === 'pagado').length;
+    const pendingCount = licenses.filter((l: any) => l.status !== 'pagado').length;
+
+    res.json({
+      success: true,
+      data: {
+        month, year, lastDay, teamSize,
+        projectedIncome,
+        receivedThisMonth,
+        expensesThisMonth,
+        netProjected,
+        perPerson,
+        paidCount,
+        pendingCount,
+        licenses,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: `Error al calcular proyección: ${err.message}` });
+  }
+};
+
+export const updateTeamSize = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { teamSize } = req.body;
+    const size = Math.max(1, Math.min(20, Number(teamSize)));
+    await query(
+      `INSERT INTO system_settings (key, value) VALUES ('team_size', $1)
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [String(size)]
+    );
+    res.json({ success: true, teamSize: size });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Error al actualizar configuración' });
+  }
+};
+
 export const deletePayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

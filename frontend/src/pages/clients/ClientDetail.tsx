@@ -100,6 +100,62 @@ export default function ClientDetailPage() {
 
       {/* Tab Content */}
       {tab === 'overview' && (
+        <div className="space-y-4">
+        {/* Active licenses + upcoming payments (auto) */}
+        {c.licenses && c.licenses.length > 0 && (() => {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const cutoffDay = c.payment_cutoff_day || c.paymentCutoffDay;
+          const lastDay = new Date(year, month + 1, 0).getDate();
+          const dueDay = cutoffDay ? Math.min(Number(cutoffDay), lastDay) : null;
+          const dueDate = dueDay ? new Date(year, month, dueDay) : null;
+          const isOverdue = dueDate && dueDate < now;
+          const activeLics = c.licenses.filter((l: any) => l.status === 'activa');
+          const monthlyLics = activeLics.filter((l: any) => (l.planType || l.plan_type) === 'mensual');
+          const monthlyTotal = monthlyLics.reduce((s: number, l: any) => s + (Number((l as any).price_mxn) || 0), 0);
+          return (
+            <div className="rounded-xl p-4 space-y-3" style={{ background: 'color-mix(in srgb, var(--accent) 4%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 15%, transparent)' }}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>Licencias activas</p>
+                {monthlyTotal > 0 && (
+                  <div className="text-right">
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mensualidad total</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--accent)' }}>{formatCurrency(monthlyTotal)}</p>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                {activeLics.map((lic: any) => (
+                  <div key={lic.id} className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: 'var(--bg-hover)' }}>
+                    <div>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{lic.productName || lic.product_name || '—'}</span>
+                      {(lic.planName || lic.plan_name) && <span className="text-xs ml-2" style={{ color: 'var(--text-muted)' }}>{lic.planName || lic.plan_name}</span>}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={lic.planType || lic.plan_type || lic.status} />
+                      <StatusBadge status={lic.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {dueDay && monthlyLics.length > 0 && (
+                <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: 'color-mix(in srgb, var(--accent) 15%, transparent)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    Próximo corte: día <strong>{dueDay}</strong> de cada mes
+                  </p>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isOverdue ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                    {isOverdue ? 'Vencido este mes' : `Vence día ${dueDay}`}
+                  </span>
+                </div>
+              )}
+              {!cutoffDay && monthlyLics.length > 0 && (
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>💡 Configura el día de corte en el cliente para ver la fecha del próximo pago</p>
+              )}
+            </div>
+          );
+        })()}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="card p-5 space-y-4">
             <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Información de Contacto</h3>
@@ -165,6 +221,7 @@ export default function ClientDetailPage() {
             )}
 
           </div>
+        </div>
         </div>
       )}
 
