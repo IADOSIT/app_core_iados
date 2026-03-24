@@ -20,8 +20,14 @@ function VersionCard({
   onDelete: (v: SoftwareVersion) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  // Backend returns snake_case from SQL alias
-  const productName = (v as any).product_name || (v as any).productName;
+  const r = v as any;
+  const productName = r.product_name || v.productName;
+  const versionName = r.version_name || v.versionName;
+  const releaseNotes = r.release_notes || v.releaseNotes;
+  const isLatest = r.is_latest ?? v.isLatest;
+  const isStable = r.is_stable ?? v.isStable;
+  const releasedAt = r.released_at || v.releasedAt;
+  const createdAt = r.created_at || v.createdAt;
 
   return (
     <div className="card p-4 space-y-3">
@@ -63,16 +69,16 @@ function VersionCard({
         <div>
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="font-mono text-lg font-bold" style={{ color: 'var(--accent)' }}>v{v.version}</span>
-            {v.isLatest && <Star size={13} style={{ color: '#F59E0B' }} fill="currentColor" />}
-            {v.isStable && <Shield size={13} style={{ color: '#10B981' }} />}
+            {isLatest && <Star size={13} style={{ color: '#F59E0B' }} fill="currentColor" />}
+            {isStable && <Shield size={13} style={{ color: '#10B981' }} />}
           </div>
-          {v.versionName && (
-            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>{v.versionName}</p>
+          {versionName && (
+            <p className="text-sm font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>{versionName}</p>
           )}
         </div>
         <div className="flex gap-1 flex-shrink-0">
-          {v.isLatest && <span className="badge badge-yellow text-xs">Latest</span>}
-          {v.isStable && <span className="badge badge-green text-xs">Estable</span>}
+          {isLatest && <span className="badge badge-yellow text-xs">Latest</span>}
+          {isStable && <span className="badge badge-green text-xs">Estable</span>}
         </div>
       </div>
 
@@ -80,15 +86,15 @@ function VersionCard({
       <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <Users size={10} /> {(v as any).client_count || 0} clientes
+            <Users size={10} /> {r.client_count || 0} clientes
           </span>
-          <span>{(v as any).license_count || 0} lic. activas</span>
+          <span>{r.license_count || 0} lic. activas</span>
         </div>
-        <span>{v.releasedAt ? formatDate(v.releasedAt) : formatDate(v.createdAt)}</span>
+        <span>{releasedAt ? formatDate(releasedAt) : formatDate(createdAt)}</span>
       </div>
 
       {/* Expandable release notes */}
-      {v.releaseNotes && (
+      {releaseNotes && (
         <div>
           <button
             onClick={() => setExpanded(!expanded)}
@@ -103,7 +109,7 @@ function VersionCard({
               className="mt-1.5 px-3 py-2.5 rounded-lg text-xs whitespace-pre-wrap leading-relaxed"
               style={{ color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}
             >
-              {v.releaseNotes}
+              {releaseNotes}
             </div>
           )}
         </div>
@@ -135,7 +141,8 @@ export default function VersionsPage() {
   });
 
   const handleDelete = (v: SoftwareVersion) => {
-    if (!window.confirm(`¿Eliminar v${v.version}${v.versionName ? ` — ${v.versionName}` : ''}? Esta acción no se puede deshacer.`)) return;
+    const name = (v as any).version_name || v.versionName;
+    if (!window.confirm(`¿Eliminar v${v.version}${name ? ` — ${name}` : ''}? Esta acción no se puede deshacer.`)) return;
     deleteVersion.mutate(v.id);
   };
 

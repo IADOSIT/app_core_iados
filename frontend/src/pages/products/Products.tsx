@@ -339,13 +339,13 @@ export default function ProductsPage() {
                   <div className="min-w-0">
                     <h3 className="font-bold text-base leading-tight" style={{ color: 'var(--text-primary)' }}>{product.name}</h3>
                     <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--text-muted)' }}>{product.description || 'Sin descripción'}</p>
-                    {product.systemUrl && (
+                    {((product as any).system_url || product.systemUrl) && (
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <a href={product.systemUrl} target="_blank" rel="noopener noreferrer"
+                        <a href={(product as any).system_url || product.systemUrl!} target="_blank" rel="noopener noreferrer"
                           className="text-xs flex items-center gap-1 hover:underline" style={{ color: 'var(--accent)' }}>
-                          <Globe size={10} /> {product.apiSlug || product.systemUrl} <ExternalLink size={9} />
+                          <Globe size={10} /> {(product as any).api_slug || product.apiSlug || (product as any).system_url || product.systemUrl} <ExternalLink size={9} />
                         </a>
-                        <button onClick={() => setPreviewUrl(product.systemUrl!)}
+                        <button onClick={() => setPreviewUrl((product as any).system_url || product.systemUrl!)}
                           className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded-md transition-colors"
                           style={{ background: 'color-mix(in srgb, var(--accent) 10%, transparent)', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)' }}>
                           <Monitor size={9} /> Preview
@@ -368,9 +368,9 @@ export default function ProductsPage() {
               </div>
 
               {/* Botón Acceder */}
-              {((product as any).accessUrl || product.systemUrl) && (
+              {((product as any).access_url || product.accessUrl || (product as any).system_url || product.systemUrl) && (
                 <a
-                  href={(product as any).accessUrl || product.systemUrl!}
+                  href={(product as any).access_url || product.accessUrl || (product as any).system_url || product.systemUrl!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-primary w-full justify-center no-underline"
@@ -391,11 +391,11 @@ export default function ProductsPage() {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg p-2" style={{ background: 'var(--bg-hover)' }}>
                   <p style={{ color: 'var(--text-muted)' }}>Precio base MXN</p>
-                  <p className="font-semibold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatCurrency(product.basePriceMxn)}</p>
+                  <p className="font-semibold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatCurrency((product as any).base_price_mxn ?? product.basePriceMxn)}</p>
                 </div>
                 <div className="rounded-lg p-2" style={{ background: 'var(--bg-hover)' }}>
                   <p style={{ color: 'var(--text-muted)' }}>Precio base USD</p>
-                  <p className="font-semibold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatCurrency(product.basePriceUsd, 'USD')}</p>
+                  <p className="font-semibold mt-0.5" style={{ color: 'var(--text-primary)' }}>{formatCurrency((product as any).base_price_usd ?? product.basePriceUsd, 'USD')}</p>
                 </div>
               </div>
 
@@ -413,8 +413,8 @@ export default function ProductsPage() {
                           <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{plan.name}</span>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{formatCurrency(plan.priceMxn)}</span>
-                          {plan.maxUsers && <span className="block text-xs" style={{ color: 'var(--text-muted)' }}>{plan.maxUsers} usr</span>}
+                          <span className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>{formatCurrency((plan as any).price_mxn ?? plan.priceMxn)}</span>
+                          {((plan as any).max_users ?? plan.maxUsers) ? <span className="block text-xs" style={{ color: 'var(--text-muted)' }}>{(plan as any).max_users ?? plan.maxUsers} usr</span> : null}
                         </div>
                       </div>
                     ))}

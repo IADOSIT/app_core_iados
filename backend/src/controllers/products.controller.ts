@@ -25,12 +25,33 @@ function buildProductSelect(sort = 'created_at', dir = 'asc') {
   `;
 }
 
+function mapPlan(p: any) {
+  return {
+    ...p,
+    productId: p.product_id,
+    priceMxn: Number(p.price_mxn) || 0,
+    priceUsd: Number(p.price_usd) || 0,
+    maxUsers: p.max_users ?? null,
+    durationDays: p.duration_days ?? null,
+    isActive: p.is_active,
+  };
+}
+
 function mapProduct(row: any) {
   return {
     ...row,
+    basePriceMxn: Number(row.base_price_mxn) || 0,
+    basePriceUsd: Number(row.base_price_usd) || 0,
+    apiSlug: row.api_slug || '',
+    systemUrl: row.system_url || null,
+    accessUrl: row.access_url || null,
     adminUser: row.admin_user || '',
     hasAdminPassword: !!row.admin_password_enc,
-    accessUrl: row.access_url || '',
+    isActive: row.is_active,
+    apiSecret: row.api_secret || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    plans: Array.isArray(row.plans) ? row.plans.map(mapPlan) : [],
     // Never return the encrypted password directly — use separate decrypt endpoint
     admin_password_enc: undefined,
   };

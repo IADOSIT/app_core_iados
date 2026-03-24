@@ -97,6 +97,7 @@ export default function LicensesPage() {
                   <th>Cliente</th>
                   <th>Producto</th>
                   <th>Plan</th>
+                  <th>Versión</th>
                   <th>Estado</th>
                   <th>Usuarios</th>
                   <th>Vencimiento</th>
@@ -119,6 +120,18 @@ export default function LicensesPage() {
                     </td>
                     <td className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                       {(lic as any).product_name || lic.productName || '—'}
+                    </td>
+                    <td>
+                      {(lic as any).version ? (
+                        <div>
+                          <span className="font-mono text-xs" style={{ color: 'var(--accent)' }}>v{(lic as any).version}</span>
+                          {(lic as any).version_name && (
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{(lic as any).version_name}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>—</span>
+                      )}
                     </td>
                     <td>
                       {((lic as any).plan_type || lic.planType) && (

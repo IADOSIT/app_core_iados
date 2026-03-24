@@ -31,7 +31,7 @@ export const getLicenses = async (req: AuthRequest, res: Response): Promise<void
               c.company_name, c.first_name as client_first, c.last_name as client_last, c.email as client_email,
               p.name as product_name,
               pp.name as plan_name, pp.type as plan_type,
-              sv.version, sv.version_name
+              sv.version, sv.version_name, sv.release_notes
        FROM licenses l
        LEFT JOIN clients c ON l.client_id = c.id
        LEFT JOIN products p ON l.product_id = p.id
