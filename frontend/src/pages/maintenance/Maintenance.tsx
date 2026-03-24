@@ -199,7 +199,7 @@ export default function MaintenancePage() {
             </div>
             <div>
               <h2 className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Limpiar Datos de Demostración</h2>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Elimina clientes, licencias y datos de prueba sembrados</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Elimina TODOS los registros de las secciones seleccionadas</p>
             </div>
           </div>
 
@@ -207,12 +207,12 @@ export default function MaintenancePage() {
           <div className="space-y-1.5">
             <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>Seleccionar secciones a limpiar:</p>
             {([
-              { key: 'clients', label: 'Clientes demo' },
-              { key: 'licenses', label: 'Licencias demo' },
-              { key: 'payments', label: 'Pagos demo' },
-              { key: 'invoices', label: 'Facturas demo' },
-              { key: 'expenses', label: 'Gastos demo' },
-              { key: 'versions', label: 'Versiones demo' },
+              { key: 'clients', label: `Todos los clientes (${stats.clients ?? 0})` },
+              { key: 'licenses', label: `Todas las licencias (${stats.licenses ?? 0})` },
+              { key: 'payments', label: `Todos los pagos (${stats.payments ?? 0})` },
+              { key: 'invoices', label: `Todas las facturas (${stats.invoices ?? 0})` },
+              { key: 'expenses', label: `Todos los gastos (${stats.expenses ?? 0})` },
+              { key: 'versions', label: `Todas las versiones (${stats.versions ?? 0})` },
             ] as const).map(({ key, label }) => (
               <label key={key} className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -229,7 +229,7 @@ export default function MaintenancePage() {
           <div className="rounded-xl p-3 flex items-start gap-2" style={{ background: 'rgba(255,193,7,0.08)', border: '1px solid rgba(255,193,7,0.2)' }}>
             <AlertTriangle size={14} style={{ color: '#FFC107', flexShrink: 0, marginTop: 1 }} />
             <p className="text-xs" style={{ color: '#E6A800' }}>
-              Acción irreversible. Solo se eliminan registros marcados como demo/seed.
+              ⚠ Acción irreversible. Se eliminarán <strong>TODOS</strong> los registros de las secciones marcadas, no solo los de demo.
             </p>
           </div>
 

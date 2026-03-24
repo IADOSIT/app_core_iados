@@ -185,7 +185,9 @@ export const testConnection = async (req: Request, res: Response) => {
     if (!token) throw new Error('Token vacío');
     res.json({ success: true, message: 'Conexión a FileBrowser exitosa ✓' });
   } catch (err: any) {
-    res.status(400).json({ success: false, message: `Error de conexión: ${err.message}` });
+    const cause = err.cause?.message || err.cause?.code || '';
+    const detail = cause ? ` — causa: ${cause}` : '';
+    res.status(400).json({ success: false, message: `Error de conexión: ${err.message}${detail}` });
   }
 };
 
@@ -200,9 +202,11 @@ export const runManualBackup = async (req: Request, res: Response) => {
       try {
         remotePath = await uploadToFileBrowser(filepath);
       } catch (fbErr: any) {
+        const cause = fbErr.cause?.message || fbErr.cause?.code || '';
+        const detail = cause ? ` (${cause})` : '';
         return res.json({
           success: true,
-          message: `Backup creado localmente. Error FileBrowser: ${fbErr.message}`,
+          message: `Backup creado localmente. Error FileBrowser: ${fbErr.message}${detail}`,
           data: { filename: path.basename(filepath), size, uploadedToSftp: false },
         });
       }
@@ -221,56 +225,51 @@ export const runManualBackup = async (req: Request, res: Response) => {
 };
 
 export const deleteDemoData = async (req: Request, res: Response) => {
-  // sections: { clients, licenses, payments, invoices, expenses, versions }
   const sections = req.body as {
     clients?: boolean; licenses?: boolean; payments?: boolean;
     invoices?: boolean; expenses?: boolean; versions?: boolean;
   };
-  const all = !Object.values(sections).some(Boolean);
 
   try {
-    const deleted: string[] = [];
+    const counts: Record<string, number> = {};
 
-    // Demo client IDs pattern
-    const demoPatterns = `email LIKE '%@nexuscorp.mx' OR email LIKE '%@elroble.mx'
-      OR email LIKE '%@powerfit.mx' OR email LIKE '%@mramirez.mx'
-      OR email LIKE '%@demo%' OR notes LIKE '%[DEMO]%' OR notes LIKE '%[SEED]%'`;
-
-    const demoRes = await query(`SELECT id FROM clients WHERE ${demoPatterns}`);
-    const demoIds = demoRes.rows.map((r: { id: string }) => r.id);
-    const hasDemo = demoIds.length > 0;
-
-    if ((all || sections.licenses) && hasDemo) {
-      await query(`DELETE FROM licenses WHERE client_id = ANY($1::uuid[])`, [demoIds]);
-      // Also delete orphan demo licenses (no client match but demo-flagged)
-      await query(`DELETE FROM licenses WHERE notes LIKE '%[SEED]%' OR notes LIKE '%[DEMO]%'`);
-      deleted.push('licencias');
+    // Delete in dependency order (children before parents)
+    if (sections.versions) {
+      const r = await query(`DELETE FROM software_versions`);
+      counts.versiones = r.rowCount ?? 0;
     }
-    if ((all || sections.payments) && hasDemo) {
-      await query(`DELETE FROM payments WHERE client_id = ANY($1::uuid[])`, [demoIds]);
-      deleted.push('pagos');
+    if (sections.expenses) {
+      const r = await query(`DELETE FROM expenses`);
+      counts.gastos = r.rowCount ?? 0;
     }
-    if ((all || sections.invoices) && hasDemo) {
-      await query(`DELETE FROM invoices WHERE client_id = ANY($1::uuid[])`, [demoIds]);
-      deleted.push('facturas');
+    if (sections.invoices) {
+      const r = await query(`DELETE FROM invoices`);
+      counts.facturas = r.rowCount ?? 0;
     }
-    if ((all || sections.clients) && hasDemo) {
-      await query(`DELETE FROM client_contacts WHERE client_id = ANY($1::uuid[])`, [demoIds]);
-      await query(`DELETE FROM clients WHERE id = ANY($1::uuid[])`, [demoIds]);
-      deleted.push('clientes');
+    if (sections.payments) {
+      const r = await query(`DELETE FROM payments`);
+      counts.pagos = r.rowCount ?? 0;
     }
-    if (all || sections.versions) {
-      await query(`DELETE FROM software_versions WHERE release_notes LIKE '%[SEED]%'`);
-      deleted.push('versiones');
+    if (sections.licenses) {
+      await query(`DELETE FROM client_version_history`);
+      const r = await query(`DELETE FROM licenses`);
+      counts.licencias = r.rowCount ?? 0;
     }
-    if (all || sections.expenses) {
-      await query(`DELETE FROM expenses WHERE notes LIKE '%[SEED]%' OR notes LIKE '%[DEMO]%'`);
-      deleted.push('gastos');
+    if (sections.clients) {
+      await query(`DELETE FROM client_version_history`);
+      await query(`DELETE FROM client_contacts`);
+      // If payments/licenses not deleted separately, cascade here
+      if (!sections.licenses) await query(`DELETE FROM licenses`);
+      if (!sections.payments) await query(`DELETE FROM payments`);
+      if (!sections.invoices) await query(`DELETE FROM invoices`);
+      const r = await query(`DELETE FROM clients`);
+      counts.clientes = r.rowCount ?? 0;
     }
 
-    const msg = deleted.length
-      ? `Eliminado: ${deleted.join(', ')}`
-      : 'No se encontraron datos de demostración';
+    const parts = Object.entries(counts).map(([k, v]) => `${k} (${v})`);
+    const msg = parts.length
+      ? `Eliminados: ${parts.join(', ')}`
+      : 'Nada seleccionado para eliminar';
     res.json({ success: true, message: msg });
   } catch (err: any) {
     res.status(500).json({ success: false, message: `Error: ${err.message}` });
