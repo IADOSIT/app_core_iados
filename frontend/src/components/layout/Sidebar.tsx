@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Key, CreditCard, FileText,
   Package, GitBranch, TrendingDown, BarChart3, Settings,
-  LogOut, ChevronLeft, ChevronRight, UserCog, Wrench,
+  LogOut, ChevronLeft, ChevronRight, UserCog, Wrench, UserSearch,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../services/api';
@@ -17,6 +17,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/products', icon: Package, label: 'Productos' },
   { to: '/clients', icon: Users, label: 'Clientes' },
+  { to: '/prospects', icon: UserSearch, label: 'Prospectos' },
   { to: '/licenses', icon: Key, label: 'Licencias' },
   { to: '/payments', icon: CreditCard, label: 'Pagos' },
   { to: '/invoices', icon: FileText, label: 'Facturas' },

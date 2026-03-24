@@ -12,6 +12,7 @@ import userRoutes from './users.routes';
 import notificationRoutes from './notifications.routes';
 import publicRoutes from './public.routes';
 import maintenanceRoutes from './maintenance.routes';
+import prospectRoutes from './prospects.routes';
 
 const router = Router();
 
@@ -26,6 +27,8 @@ router.use('/expenses', expenseRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/users', userRoutes);
 router.use('/notifications', notificationRoutes);
+
+router.use('/prospects', prospectRoutes);
 
 // Rutas públicas para sistemas externos (sin JWT)
 router.use('/public', publicRoutes);

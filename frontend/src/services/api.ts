@@ -182,6 +182,20 @@ export const maintenanceApi = {
 };
 
 // ========================
+// PROSPECTS
+// ========================
+export const prospectsApi = {
+  getAll: (params?: Record<string, unknown>) => api.get('/prospects', { params }),
+  getOne: (id: string) => api.get(`/prospects/${id}`),
+  create: (data: Record<string, unknown>) => api.post('/prospects', data),
+  update: (id: string, data: Record<string, unknown>) => api.put(`/prospects/${id}`, data),
+  delete: (id: string) => api.delete(`/prospects/${id}`),
+  addQuote: (id: string, data: Record<string, unknown>) => api.post(`/prospects/${id}/quotes`, data),
+  updateQuote: (id: string, qid: string, data: Record<string, unknown>) => api.put(`/prospects/${id}/quotes/${qid}`, data),
+  deleteQuote: (id: string, qid: string) => api.delete(`/prospects/${id}/quotes/${qid}`),
+};
+
+// ========================
 // NOTIFICATIONS
 // ========================
 export const notificationsApi = {
